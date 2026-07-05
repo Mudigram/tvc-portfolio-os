@@ -1,0 +1,95 @@
+'use client'
+
+import { PortfolioSummaryBar } from '@/features/exposure/components/PortfolioSummaryBar'
+import { ExposureByCompanyTable } from '@/features/exposure/components/ExposureByCompanyTable'
+import { InstrumentTypeSummaryTable } from '@/features/exposure/components/InstrumentTypeSummaryTable'
+import { ExposureStackedBarChart } from '@/features/exposure/components/ExposureStackedBarChart'
+import type { PortfolioExposureData } from '@/features/exposure/types'
+
+interface PortfolioExposureViewProps {
+  data: PortfolioExposureData
+}
+
+export function PortfolioExposureView({ data }: PortfolioExposureViewProps) {
+  return (
+    <div className="space-y-14 max-w-[1600px] mx-auto py-2">
+
+      {/* Main Section Header */}
+      <div className="border-b border-zinc-100 pb-6">
+        <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">Consolidated Economic Exposure</h1>
+        <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+          Active Positions Only — Converted, Terminated, or Exited Instruments Excluded
+        </p>
+      </div>
+
+      {/* Consolidated Capital Ledger Strip */}
+      <div className="pb-4 border-b border-zinc-100">
+        <PortfolioSummaryBar {...data.summary} />
+      </div>
+
+      {/* Breakdown Segment: By Company Asset */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-zinc-100/80 pb-3">
+          <div className="flex items-baseline gap-2.5">
+            <h2 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+              Asset Exposure Matrix
+            </h2>
+            <span className="text-xs font-mono font-bold text-[#1a23bd] bg-blue-50/60 px-1.5 py-0.2 rounded border border-blue-100/50">
+              {data.byCompany.length} Assets Tracked
+            </span>
+          </div>
+          <span className="text-xs text-zinc-400 font-medium hidden sm:inline">
+            Reflecting combined TD, TVCLabs, and Angels@TVCLabs positions
+          </span>
+        </div>
+        <p className="text-xs text-zinc-400 max-w-3xl leading-relaxed">
+          The table below displays positions belonging strictly to our immediate internal ecosystem. 
+          Co-investors, external syndicates, and unmanaged tranches can be reviewed inside each asset&apos;s standalone cap table view.
+        </p>
+        <div className="pt-2">
+          <ExposureByCompanyTable companies={data.byCompany} />
+        </div>
+      </section>
+
+      {/* Breakdown Segment: Structural Distribution */}
+      <section className="space-y-6 pt-2">
+        <div className="border-b border-zinc-100 pb-3">
+          <h2 className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+            Allocation Dynamics & Instrument Breakdown
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+
+          {/* Allocation Column: Stacked Bar Chart */}
+          <div className="space-y-4 lg:col-span-5 min-w-0">
+            <div className="space-y-1">
+              <h3 className="text-xs font-semibold text-zinc-800">Deployment Concentration</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Visualizing capital allocations across active portfolio companies, color-segmented by their respective funding instrument types.
+              </p>
+            </div>
+            <div className="pt-2">
+              <ExposureStackedBarChart data={data.chartData} />
+            </div>
+          </div>
+
+          {/* Allocation Column: Summary Ledger Table */}
+          <div className="space-y-4 lg:col-span-5">
+            <div className="space-y-1">
+              <h3 className="text-xs font-semibold text-zinc-800">Aggregate Class Balance</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Consolidated capital and row instance summary tracking asset deployment types across the ecosystem.
+              </p>
+            </div>
+            <div className="pt-2">
+              <InstrumentTypeSummaryTable data={data.byInstrument} />
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  )
+}
