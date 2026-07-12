@@ -14,7 +14,7 @@ export default async function MyCompanyPage() {
   if (!claims) redirect('/login')
 
   const companyId = await getFounderCompanyId(claims.userId)
-
+  
   if (!companyId) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center px-8">

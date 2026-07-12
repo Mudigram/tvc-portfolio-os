@@ -52,6 +52,7 @@ export async function getFounderCompanyData(
   companyId: string,
   founderId: string
 ): Promise<FounderCompanyData | null> {
+  
   const supabase = await createServerClient()
 
   // ── Company identity ────────────────────────────────────────────────────

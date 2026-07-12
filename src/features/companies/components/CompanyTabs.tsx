@@ -34,15 +34,9 @@ interface CompanyTabsProps {
 }
 
 
-function TabLoading() {
-  return (
-    <div className="py-24 flex items-center justify-center">
-      <p className="text-sm text-zinc-400">Loading…</p>
-    </div>
-  )
-}
 
-export default function CompanyTabs({ company, exposureRows, updatesTabElement, fundingTabElement, advisoryTabElement, exitTabElement, ddrTabElement, captableTabElement, exposureTabElement }: CompanyTabsProps) {
+
+export default function CompanyTabs({ company, updatesTabElement, fundingTabElement, advisoryTabElement, exitTabElement, ddrTabElement, captableTabElement, exposureTabElement }: CompanyTabsProps) {
   const [active, setActive] = useState<Tab>('Overview')
 
   return (

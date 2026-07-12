@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/types/roles'
 import { SignOutButton } from '@/features/auth/components/SignOutButton'
-import { X, LayoutDashboard, Building2, Users2, LineChart, Briefcase, FileText, Send, LogOut } from 'lucide-react'
+import { X, LayoutDashboard, Building2, Users2, LineChart, Briefcase, FileText, Send, LogOut, Settings } from 'lucide-react' // 💡 Added Settings icon
 
 interface NavItem {
   label: string
@@ -33,13 +33,16 @@ interface SidebarProps {
   role: UserRole
   email: string
   isOpen: boolean
-  isCollapsed: boolean // Connected structural desktop attribute
+  isCollapsed: boolean 
   onClose: () => void
 }
 
 export default function Sidebar({ role, email, isOpen, isCollapsed, onClose }: SidebarProps) {
   const pathname = usePathname()
   const items = NAV[role]
+  
+  // 💡 Check if settings link matches current route path
+  const isSettingsActive = pathname === '/settings' || pathname.startsWith('/settings/')
 
   return (
     <>
@@ -77,7 +80,7 @@ export default function Sidebar({ role, email, isOpen, isCollapsed, onClose }: S
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                title={isCollapsed ? item.label : undefined} // Tooltip fallback hint for minimal display state
+                title={isCollapsed ? item.label : undefined}
                 className={`
                   flex items-center h-9 rounded text-xs tracking-wide uppercase transition-all duration-150
                   font-semibold group relative
@@ -96,6 +99,29 @@ export default function Sidebar({ role, email, isOpen, isCollapsed, onClose }: S
             )
           })}
         </nav>
+
+        {/* 💡 Utilities & Settings Section */}
+        <div className="space-y-1 mb-2">
+          <Link
+            href="/settings"
+            onClick={onClose}
+            title={isCollapsed ? 'Settings' : undefined}
+            className={`
+              flex items-center h-9 rounded text-xs tracking-wide uppercase transition-all duration-150
+              font-semibold group relative
+              ${isCollapsed ? 'justify-center border-0' : 'px-3 border-l-2'}
+              ${isSettingsActive
+                ? 'bg-white/10 text-white border-[#1a23bd]'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5 border-transparent'
+              }
+            `}
+          >
+            <Settings className={`w-4 h-4 shrink-0 transition-transform ${isCollapsed ? 'm-0' : 'mr-3'}`} />
+            <span className={`transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0 hidden' : 'opacity-100'}`}>
+              Settings
+            </span>
+          </Link>
+        </div>
 
         <div className="border-t border-white/10 mx-2 mb-4" />
 
