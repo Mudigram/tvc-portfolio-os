@@ -1,9 +1,9 @@
 // TVCLabs entity holder IDs — used to filter "our" position vs other investors
 // These match the holders seeded earlier
 export const TVCLABS_HOLDER_IDS = [
-    'h100000-0000-0000-0000-000000000001', // TVCLabs
-    'h100000-0000-0000-0000-000000000002', // TD (Principal)
-    'h100000-0000-0000-0000-000000000003', // Angels@TVCLabs SPV
+    '10000000-0000-0000-0000-000000000001', // TVCLabs
+    '10000000-0000-0000-0000-000000000002', // TD (Principal)
+    '10000000-0000-0000-0000-000000000003', // Angels@TVCLabs SPV
   ]
   
   export type ExposureType =

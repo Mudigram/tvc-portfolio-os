@@ -40,7 +40,10 @@ export default function Header({ title, onMenuToggle, onDesktopToggle, isCollaps
 
       {/* Right side status indicators persist unchanged */}
       <div className="flex items-center gap-6">
-        <button className="hidden md:flex items-center gap-2 text-zinc-400 hover:text-zinc-600 text-xs font-medium">
+        <button 
+          onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+          className="hidden md:flex items-center gap-2 text-zinc-400 hover:text-zinc-600 text-xs font-medium transition-colors"
+        >
           <Search className="w-3.5 h-3.5 stroke-[2.5]" />
           <span>Quick Find…</span>
           <kbd className="bg-zinc-100 text-[10px] font-mono px-1.5 py-0.5 rounded border border-zinc-200/60 font-bold ml-1">⌘K</kbd>
