@@ -5,6 +5,7 @@ import { useRole } from '@/hooks/useRole'
 import { saveDdrStatusAction } from '../actions/saveDdrStatus.action'
 import type { DdrStatusData, DgcDdrStatus } from '../types'
 import { useToast } from '@/hooks/use-toast'
+import { FormSelect } from '@/components/ui/form-select'
 
 interface DdrTabViewProps {
   companyId: string;
@@ -16,7 +17,7 @@ const STATUS_OPTS: DgcDdrStatus[] = ['Awaiting Documents', 'In Progress', 'Verif
 export default function DdrTabView({ companyId, initialData }: DdrTabViewProps) {
   const { role } = useRole()
   const { toast } = useToast()
-  const isInternal = role === 'internal'
+  const isInternal = role === 'internal' || role === 'admin'
 
   // Component local fields states
   const [status, setStatus] = useState<DgcDdrStatus>(initialData?.current_status ?? 'Awaiting Documents')
@@ -123,23 +124,28 @@ export default function DdrTabView({ companyId, initialData }: DdrTabViewProps) 
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Update Reported Status</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as DgcDdrStatus)} className="w-full border p-2 bg-white text-sm rounded">
+              <FormSelect value={status} onChange={(e) => setStatus(e.target.value as DgcDdrStatus)}>
                 {STATUS_OPTS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+              </FormSelect>
             </div>
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Shared Bridge DGC Contact</label>
-              <input type="text" placeholder="e.g. John Doe (Shared Team)" value={contact} onChange={(e) => setContact(e.target.value)} className="w-full border p-2 text-sm rounded focus:ring-2 focus:ring-zinc-900 focus:outline-none" />
+              <input type="text" placeholder="e.g. John Doe (Shared Team)" value={contact} onChange={(e) => setContact(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm outline-none transition-all" />
             </div>
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Communications Summary / Notes Thread</label>
-              <textarea rows={6} placeholder="Record update logs, milestone gaps, or verification timelines from DGC..." value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full border p-2 text-xs rounded resize-none focus:ring-2 focus:ring-zinc-900 focus:outline-none" />
+              <textarea rows={6} placeholder="Record update logs, milestone gaps, or verification timelines from DGC..." value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm outline-none resize-none transition-all" />
             </div>
 
-            <button type="submit" disabled={saving} className="w-full h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors mt-2">
-              {saving ? 'Committing log sync…' : 'Sync DGC Data State'}
+            <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+              {saving ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Committing log sync…
+                </>
+              ) : 'Sync DGC Data State'}
             </button>
           </form>
         </div>

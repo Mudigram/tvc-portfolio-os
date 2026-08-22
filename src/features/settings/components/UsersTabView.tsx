@@ -16,9 +16,10 @@ interface Props {
   users: ManagedUser[]
 }
 
-const ROLES: UserRole[] = ['internal', 'angel', 'founder']
+const ROLES: UserRole[] = ['admin', 'internal', 'angel', 'founder']
 
 const ROLE_STYLES: Record<string, string> = {
+  admin:    'text-purple-700 bg-purple-50 border-purple-200',
   internal: 'text-[#1a23bd] bg-blue-50 border-blue-200',
   angel:    'text-amber-700 bg-amber-50 border-amber-200',
   founder:  'text-emerald-700 bg-emerald-50 border-emerald-200',

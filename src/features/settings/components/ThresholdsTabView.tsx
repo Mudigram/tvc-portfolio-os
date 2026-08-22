@@ -30,6 +30,12 @@ const THRESHOLD_GROUPS = [
       key === 'cap_table_stale_months' ? 'months' : '%',
   },
   {
+    heading: 'Position verification staleness',
+    description: 'Controls the threshold (in days) after which unverified positions and companies are flagged as overdue for verification.',
+    settings: ['staleness_threshold_days'] as SettingKey[],
+    suffix: () => 'days',
+  },
+  {
     heading: 'Update cycle',
     description: 'Controls when the dashboard flags companies as overdue or critical for POEM updates.',
     settings: [

@@ -19,12 +19,13 @@ export interface AppSetting {
     | 'cap_table_stale_months'
     | 'update_cycle_warning_days'
     | 'update_cycle_critical_days'
+    | 'staleness_threshold_days'
   
   // Convenience map
   export type SettingsMap = Record<SettingKey, AppSetting>
   
   // ── User management ───────────────────────────────────────────
-  export type UserRole = 'internal' | 'angel' | 'founder'
+  export type UserRole = 'admin' | 'internal' | 'angel' | 'founder'
   
   export interface ManagedUser {
     id: string

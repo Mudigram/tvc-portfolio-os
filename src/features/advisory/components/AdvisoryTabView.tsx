@@ -5,6 +5,7 @@ import { useRole } from '@/hooks/useRole'
 import { logAdvisoryActivityAction } from '../actions/LogAdvisoryActivity.action'
 import type { AdvisoryActivity, AdvisorRosterItem, AdvisorInteractionType } from '../types'
 import { useToast } from '@/hooks/use-toast'
+import { FormSelect } from '@/components/ui/form-select'
 
 interface AdvisoryTabViewProps {
   companyId: string
@@ -30,7 +31,7 @@ const INTERACTION_TYPES: { value: AdvisorInteractionType; label: string }[] = [
 export default function AdvisoryTabView({ companyId, activities, roster }: AdvisoryTabViewProps) {
   const { role } = useRole()
   const { toast } = useToast()
-  const isInternal = role === 'internal'
+  const isInternal = role === 'internal' || role === 'admin'
 
   // Form Management States
   const [advisorName, setAdvisorName] = useState('')
@@ -159,10 +160,10 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
 
   {!useCustomAdvisor ? (
     <div className="flex items-center gap-2">
-      <select
+      <FormSelect
         value={advisorName}
         onChange={(e) => setAdvisorName(e.target.value)}
-        className="flex-1 border p-2 rounded bg-white text-sm focus:ring-2 focus:ring-zinc-900"
+        className="flex-1"
         required={!useCustomAdvisor}
       >
         <option value="">-- Choose Advisor --</option>
@@ -171,7 +172,7 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
         ))}
         <option disabled>──────────</option>
         <option value="__custom__">Someone not on this list…</option>
-      </select>
+      </FormSelect>
     </div>
   ) : (
     <div className="flex items-center gap-2">
@@ -198,44 +199,48 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Session Date</label>
-                  <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} className="w-full border p-1.5 rounded text-sm" required />
+                  <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" required />
                 </div>
                 <div>
   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">
     Advisory Stream / Channel
   </label>
-  <select 
-    value={advisorType} 
-    onChange={(e) => setAdvisorType(e.target.value as AdvisorInteractionType)} 
-    className="w-full border p-1.5 rounded text-sm bg-white"
-  >
+      <FormSelect
+        value={advisorType}
+        onChange={(e) => setAdvisorType(e.target.value as AdvisorInteractionType)}
+      >
     {INTERACTION_TYPES.map(t => (
       <option key={t.value} value={t.value}>{t.label}</option>
     ))}
-  </select>
+  </FormSelect>
 </div>
               </div>
 
               <div>
                 <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Interaction Summary / Notes</label>
-                <textarea rows={4} placeholder="What issues were evaluated? Note key outputs/intros..." value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full border p-2 rounded text-sm focus:ring-2 focus:ring-zinc-900 resize-none" required />
+                <textarea rows={4} placeholder="What issues were evaluated? Note key outputs/intros..." value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm resize-none" required />
               </div>
 
               <div className="border-t border-zinc-50 pt-3 space-y-3">
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Follow-on Action Item (Optional)</label>
-                  <input type="text" placeholder="e.g. Schedule review workshop" value={nextAction} onChange={(e) => setNextAction(e.target.value)} className="w-full border p-1.5 rounded text-sm" />
+                  <input type="text" placeholder="e.g. Schedule review workshop" value={nextAction} onChange={(e) => setNextAction(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Action Deadline</label>
-                  <input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="w-full border p-1.5 rounded text-sm" />
+                  <input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" />
                 </div>
               </div>
               
 
-              <button type="submit" disabled={saving || !advisorName} className="w-full h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors mt-2">
-                {saving ? 'Saving engagement log…' : 'Commit Interaction Log'}
-              </button>
+              <button type="submit" disabled={saving || !advisorName} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors">
+        {saving ? (
+          <>
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Saving...
+          </>
+        ) : 'Log Interaction'}
+      </button>
             </form>
           )}
         </div>

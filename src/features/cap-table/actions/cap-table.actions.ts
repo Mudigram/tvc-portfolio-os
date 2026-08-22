@@ -33,7 +33,7 @@ export async function saveCapTable(
 ): Promise<SaveCapTableResult> {
   // ── Auth guard — internal only ────────────────────────────
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { success: false, error: 'Unauthorised' }
   }
 

@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase/server'
 import { getCompanyExitReadiness } from '../services/exit-readiness.service'
 import ExitReadinessTabView from './ExitReadinessTabView'
 
@@ -7,8 +6,7 @@ interface CompanyExitReadinessTabProps {
 }
 
 export default async function CompanyExitReadinessTab({ companyId }: CompanyExitReadinessTabProps) {
-  const supabase = await createServerClient()
-  const data = await getCompanyExitReadiness(supabase, companyId)
+  const data = await getCompanyExitReadiness(companyId)
 
   return (
     <ExitReadinessTabView

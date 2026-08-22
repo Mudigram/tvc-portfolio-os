@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import type { HolderOption } from '../services/holders.service'
 import type { HolderType } from '../types'
+import { FormSelect } from '@/components/ui/form-select'
 
 const HOLDER_TYPES: HolderType[] = ['Founder', 'Investor', 'Advisor', 'Employee']
 
@@ -182,12 +183,12 @@ export function HolderPicker({ holders = [], tvcHolderIds = [] }: Props) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Holder type
               </label>
-              <select name="new_holder_type" className={selectClass} required>
+              <FormSelect name="new_holder_type" required>
                 <option value="">Select type</option>
                 {HOLDER_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
-              </select>
+              </FormSelect>
             </div>
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">

@@ -4,7 +4,7 @@ import { getClaims } from '@/features/auth/services/auth.server'
 
 export default async function FounderLayout({ children }: { children: React.ReactNode }) {
   return (
-    <RoleShell allowedRoles={['founder', 'internal']}>
+    <RoleShell allowedRoles={['founder', 'internal', 'admin']}>
       <FounderShell>{children}</FounderShell>
     </RoleShell>
   )
@@ -12,8 +12,9 @@ export default async function FounderLayout({ children }: { children: React.Reac
 
 async function FounderShell({ children }: { children: React.ReactNode }) {
   const claims = await getClaims()
+  const activeRole = ['internal', 'admin'].includes(claims?.role ?? '') ? (claims!.role as any) : 'founder'
   return (
-    <AppShell role={claims!.role === 'internal' ? 'internal' : 'founder'} email={claims!.email}>
+    <AppShell role={activeRole} email={claims!.email}>
       {children}
     </AppShell>
   )

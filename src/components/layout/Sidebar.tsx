@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/types/roles'
 import { SignOutButton } from '@/features/auth/components/SignOutButton'
-import { X, LayoutDashboard, Building2, Users2, LineChart, Briefcase, FileText, Send, LogOut, Settings } from 'lucide-react' // 💡 Added Settings icon
+import { X, LayoutDashboard, Building2, Users2, LineChart, FileCheck, Briefcase, Send, LogOut, Settings } from 'lucide-react' // 💡 Added Settings & FileCheck icon
 
 interface NavItem {
   label: string
@@ -13,19 +13,29 @@ interface NavItem {
 }
 
 const NAV: Record<UserRole, NavItem[]> = {
+  admin: [
+    { label: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboard },
+    { label: 'Companies',      href: '/companies',      icon: Building2 },
+    { label: 'Founders',       href: '/founders',       icon: Users2 },
+    { label: 'Exposure',       href: '/exposure',       icon: LineChart },
+    { label: 'Reconciliation', href: '/reconciliation', icon: FileCheck },
+    { label: 'Campaigns',      href: '/campaigns',      icon: Send }
+  ],
   internal: [
-    { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
-    { label: 'Companies',  href: '/companies', icon: Building2 },
-    { label: 'Founders',   href: '/founders',  icon: Users2 },
-    { label: 'Exposure',   href: '/exposure',  icon: LineChart },
+    { label: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboard },
+    { label: 'Companies',      href: '/companies',      icon: Building2 },
+    { label: 'Founders',       href: '/founders',       icon: Users2 },
+    { label: 'Exposure',       href: '/exposure',       icon: LineChart },
+    { label: 'Reconciliation', href: '/reconciliation', icon: FileCheck },
+    { label: 'Campaigns',      href: '/campaigns',      icon: Send }
   ],
   angel: [
     { label: 'My Portfolio', href: '/portfolio', icon: Briefcase },
   ],
   founder: [
-    { label: 'My Company',    href: '/my-company',     icon: Building2 },
-    { label: 'Submit Update', href: '/submit-update',   icon: Send },
-    { label: 'Documents',     href: '/documents',       icon: FileText },
+    { label: 'Dashboard',   href: '/founder-dashboard',  icon: LayoutDashboard },
+    { label: 'My Company',  href: '/my-company', icon: Building2 },
+    { label: 'Updates',     href: '/updates',    icon: Send },
   ],
 }
 

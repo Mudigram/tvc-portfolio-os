@@ -6,6 +6,7 @@ import { saveFundingStatusAction } from '../actions/saveFundingStatus.action'
 import { createFundingRoundAction } from '../actions/createFundingRound.action'
 import type { FundingRound, FundingStatus, CompanyFundingSummary, RoundName } from '../types'
 import { useToast } from '@/hooks/use-toast'
+import { FormSelect } from '@/components/ui/form-select'
 
 interface FundingTabViewProps {
   companyId: string
@@ -24,7 +25,7 @@ const ROUND_TYPES: RoundName[] = ['Pre-seed', 'Seed', 'Series A', 'Series B', 'S
 export default function FundingTabView({ companyId, initialStatus, rounds, summary }: FundingTabViewProps) {
   const { role } = useRole()
   const { toast } = useToast()
-  const isInternal = role === 'internal'
+  const isInternal = role === 'internal' || role === 'admin'
 
   // 1. Extended Management States
   const [isActivelyRaising, setIsActivelyRaising] = useState(initialStatus?.is_actively_raising ?? false)
@@ -219,8 +220,13 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
                 <input type="checkbox" checked={followon} onChange={(e) => setFollowon(e.target.checked)} className="accent-zinc-900" />
               </div>
 
-              <button type="submit" disabled={saving} className="w-full h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors mt-2">
-                {saving ? 'Saving changes…' : 'Save Operational Status'}
+              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+                {saving ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Saving changes…
+                  </>
+                ) : 'Save Operational Status'}
               </button>
             </form>
           )}
@@ -233,9 +239,9 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
             
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase">Round Tier Stage</label>
-              <select value={roundName} onChange={(e) => setRoundName(e.target.value as RoundName)} className="w-full p-2 border rounded text-sm bg-white mt-1">
+              <FormSelect value={roundName} onChange={(e) => setRoundName(e.target.value as RoundName)}>
                 {ROUND_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              </FormSelect>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -251,12 +257,21 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase">Lead Institutional Investor</label>
-              <input type="text" placeholder="e.g. Sequoia Capital" value={roundLead} onChange={(e) => setRoundLead(e.target.value)} className="w-full p-2 border rounded text-sm mt-1" />
+              <input type="text" placeholder="e.g. Sequoia Capital" value={roundLead} onChange={(e) => setRoundLead(e.target.value)} className="w-full px-3 py-2 border rounded-md text-sm mt-1" />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <button type="button" onClick={() => setShowRoundModal(false)} className="px-3 py-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800">Cancel</button>
-              <button type="submit" disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-[#1a23bd] rounded hover:bg-[#151c9a]">Commit Record</button>
+            <div className="flex justify-end gap-3 pt-4">
+              <button type="button" onClick={() => setShowRoundModal(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors">
+                {saving ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Logging...
+                  </>
+                ) : 'Confirm Round'}
+              </button>
             </div>
           </form>
         </div>

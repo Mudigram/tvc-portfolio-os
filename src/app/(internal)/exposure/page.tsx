@@ -5,7 +5,14 @@ export const metadata = {
   title: 'Exposure — TVCLabs Portfolio OS',
 }
 
-export default async function ExposurePage() {
-  const data = await getPortfolioExposure()
-  return <PortfolioExposureView data={data} />
+interface ExposurePageProps {
+  searchParams: Promise<{ as_of?: string }>
+}
+
+export default async function ExposurePage({ searchParams }: ExposurePageProps) {
+  const resolvedSearchParams = await searchParams
+  const asOf = resolvedSearchParams?.as_of
+  const data = await getPortfolioExposure(asOf)
+
+  return <PortfolioExposureView data={data} asOfDate={asOf} />
 }

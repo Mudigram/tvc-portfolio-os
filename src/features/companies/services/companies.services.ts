@@ -10,39 +10,42 @@ import type { CompanyCardData, CompanyProfile, HealthUpdatePayload } from '@/fea
  * Funding: is_actively_raising from the most recent funding_status row per company.
  */
 export async function getDashboardCompanies(): Promise<CompanyCardData[]> {
-  const supabase = await createServerClient()
+  try {
+    const supabase = await createServerClient()
 
-  const now = new Date()
-  const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const staleThreshold = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+    const now = new Date()
+    const cycleStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const staleThreshold = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data, error } = await supabase
-    .from('companies')
-    .select(`
-      id,
-      name,
-      sector,
-      stage,
-      portfolio_health,
-      health_reviewed_at,
-      last_verified_date,
-      monthly_updates (
-        submitted_at
-      ),
-      funding_status (
-        is_actively_raising,
-        created_at
-      ),
-      exit_readiness (
-        overall_readiness
-      )
-    `)
-    .order('name')
+    const { data, error } = await supabase
+      .from('companies')
+      .select(`
+        id,
+        name,
+        sector,
+        stage,
+        logo_url,
+        logo_path,
+        portfolio_health,
+        health_reviewed_at,
+        last_verified_date,
+        monthly_updates (
+          submitted_at
+        ),
+        funding_status (
+          is_actively_raising,
+          created_at
+        ),
+        exit_readiness (
+          overall_readiness
+        )
+      `)
+      .order('name')
 
-  if (error) {
-    console.error('[companies.service] getDashboardCompanies error:', error.message)
-    return []
-  }
+    if (error) {
+      console.error('[companies.service] getDashboardCompanies error:', error.message)
+      return []
+    }
 
   return (data ?? []).map((row) => {
     // POEM — did they submit anything this calendar month?
@@ -81,6 +84,8 @@ const exitSignal = mapExitSignal(rawReadiness ?? null);
       name: row.name,
       sector: row.sector ?? null,
       stage: row.stage ?? null,
+      logo_url: (row as any).logo_url ?? null,
+      logo_path: (row as any).logo_path ?? null,
       portfolio_health: row.portfolio_health ?? null,
       health_reviewed_at: row.health_reviewed_at ?? null,
       update_submitted_this_cycle: submittedThisCycle,
@@ -90,6 +95,13 @@ const exitSignal = mapExitSignal(rawReadiness ?? null);
       exit_readiness_signal: exitSignal,
     }
   })
+  } catch (err: any) {
+    if (err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('Dynamic server usage')) {
+      throw err
+    }
+    console.error('[companies.service] getDashboardCompanies network error:', err?.message || err)
+    return []
+  }
 }
 
 function mapExitSignal(
@@ -103,8 +115,9 @@ function mapExitSignal(
 }
 
 export async function getCompanyProfile(id: string): Promise<CompanyProfile | null> {
+  try {
     const supabase = await createServerClient()
-  
+
     const { data, error } = await supabase
       .from('companies')
       .select(`
@@ -115,49 +128,122 @@ export async function getCompanyProfile(id: string): Promise<CompanyProfile | nu
         country,
         website,
         legal_entity,
+        logo_url,
+        logo_path,
+        bio,
+        investment_date,
+        instrument_type,
+        amount_invested,
+        currency,
+        syndicate_holdings,
         last_verified_date,
         verified_by,
         portfolio_health,
         health_reviewed_at,
         health_reviewed_by,
         health_notes,
-        founders (
+        crm_founder_id,
+        founders:crm_founder_id (
           id,
           full_name,
           email
         )
       `)
       .eq('id', id)
-      .single()
-  
-    if (error || !data) {
-      console.error('[companies.service] getCompanyProfile error:', error?.message)
-      return null
+      .maybeSingle()
+
+    if (error) {
+      console.error('[companies.service] getCompanyProfile error:', error.message)
     }
-  
-    const founderRow = Array.isArray(data.founders)
-      ? data.founders[0]
-      : data.founders
-  
+
+    let finalData = data
+    let founderObj: { id: string; full_name: string; email: string } | null = null
+
+    if (!finalData) {
+      // Fallback simple query without relation embedding
+      const { data: simpleData, error: simpleError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (simpleError || !simpleData) {
+        console.error('[companies.service] getCompanyProfile fallback error:', simpleError?.message)
+        return null
+      }
+      finalData = simpleData as any
+    }
+
+    if (!finalData) return null
+
+    // Parse founder info
+    if (finalData.founders) {
+      const f = Array.isArray(finalData.founders) ? finalData.founders[0] : finalData.founders
+      if (f) founderObj = { id: f.id, full_name: f.full_name ?? '', email: f.email ?? '' }
+    } else if (finalData.crm_founder_id) {
+      const { data: fData } = await supabase
+        .from('founders')
+        .select('id, full_name, email')
+        .eq('id', finalData.crm_founder_id)
+        .maybeSingle()
+      if (fData) {
+        founderObj = { id: fData.id, full_name: fData.full_name ?? '', email: fData.email ?? '' }
+      }
+    }
+
+    let figureDocuments: any[] = []
+    const [docsData, summaryData] = await Promise.all([
+      supabase
+        .from('company_figure_documents')
+        .select('*')
+        .eq('company_id', id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('company_investment_summary')
+        .select('amount_invested, currency, instrument_type, investment_date')
+        .eq('company_id', id)
+        .maybeSingle(),
+    ])
+
+    if (docsData.data) {
+      figureDocuments = docsData.data
+    }
+
+    const summary = summaryData.data
+
     return {
-      id: data.id,
-      name: data.name,
-      sector: data.sector ?? null,
-      stage: data.stage ?? null,
-      country: data.country ?? null,
-      website: data.website ?? null,
-      legal_entity: data.legal_entity ?? null,
-      last_verified_date: data.last_verified_date ?? null,
-      verified_by: data.verified_by ?? null,
-      portfolio_health: data.portfolio_health ?? null,
-      health_reviewed_at: data.health_reviewed_at ?? null,
-      health_reviewed_by: data.health_reviewed_by ?? null,
-      health_notes: data.health_notes ?? null,
-      founder: founderRow
-        ? { id: founderRow.id, full_name: founderRow.full_name, email: founderRow.email }
-        : null,
+      id: finalData.id,
+      name: finalData.name,
+      sector: finalData.sector ?? null,
+      stage: finalData.stage ?? null,
+      country: finalData.country ?? null,
+      website: finalData.website ?? null,
+      legal_entity: finalData.legal_entity ?? null,
+      logo_url: finalData.logo_url ?? null,
+      logo_path: finalData.logo_path ?? null,
+      bio: finalData.bio ?? null,
+      investment_date: summary?.investment_date ?? finalData.investment_date ?? null,
+      instrument_type: summary?.instrument_type ?? finalData.instrument_type ?? null,
+      amount_invested: summary?.amount_invested != null ? Number(summary.amount_invested) : (finalData.amount_invested != null ? Number(finalData.amount_invested) : null),
+      currency: summary?.currency ?? finalData.currency ?? 'USD',
+      syndicate_holdings: finalData.syndicate_holdings ?? null,
+      last_verified_date: finalData.last_verified_date ?? null,
+      verified_by: finalData.verified_by ?? null,
+      portfolio_health: finalData.portfolio_health ?? null,
+      health_reviewed_at: finalData.health_reviewed_at ?? null,
+      health_reviewed_by: finalData.health_reviewed_by ?? null,
+      health_notes: finalData.health_notes ?? null,
+      founder: founderObj,
+      figure_documents: figureDocuments,
     }
+  } catch (err: any) {
+    if (err?.digest === 'DYNAMIC_SERVER_USAGE' || err?.message?.includes('Dynamic server usage')) {
+      throw err
+    }
+    console.error('[companies.service] getCompanyProfile network error:', err?.message || err)
+    return null
   }
+}
   
   /**
    * Updates the portfolio health status for a company.

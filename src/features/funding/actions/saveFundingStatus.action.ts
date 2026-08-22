@@ -23,7 +23,8 @@ export async function saveFundingStatusAction(input: SaveFundingStatusInput) {
       return { success: false, error: 'Unauthorized: Invalid session.' }
     }
 
-    if (user.user_metadata?.role !== 'internal') {
+    const role = user.app_metadata?.role || user.user_metadata?.role
+    if (role !== 'internal' && role !== 'admin') {
       return { success: false, error: 'Unauthorized: Access restricted.' }
     }
 

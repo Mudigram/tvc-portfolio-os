@@ -17,7 +17,7 @@ export const metadata = {
 export default async function CampaignsPage() {
   const claims = await getClaims()
 
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     redirect('/login')
   }
 

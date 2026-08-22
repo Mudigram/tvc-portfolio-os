@@ -52,6 +52,7 @@ export async function getClaims(): Promise<AuthClaims | null> {
  */
 export function getRoleRedirect(role: UserRole): string {
   const destinations: Record<UserRole, string> = {
+    admin: '/dashboard',
     internal: '/dashboard',
     angel: '/portfolio',
     founder: '/my-company',

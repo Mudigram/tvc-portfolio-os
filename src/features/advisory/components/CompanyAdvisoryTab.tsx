@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase/server'
 import { getCompanyAdvisoryData } from '../services/advisory.service'
 import AdvisoryTabView from './AdvisoryTabView'
 
@@ -7,8 +6,7 @@ interface CompanyAdvisoryTabProps {
 }
 
 export default async function CompanyAdvisoryTab({ companyId }: CompanyAdvisoryTabProps) {
-  const supabase = await createServerClient()
-  const { activities, roster } = await getCompanyAdvisoryData(supabase, companyId)
+  const { activities, roster } = await getCompanyAdvisoryData(companyId)
 
   return (
     <AdvisoryTabView

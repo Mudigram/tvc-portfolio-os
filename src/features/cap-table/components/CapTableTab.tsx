@@ -30,6 +30,21 @@ export default async function CapTableTab({ companyId, companyName }: Props) {
 
   const data = await getCapTableByCompanyId(companyId)
 
+  let defaultFounderThreshold: number | null = null
+  let defaultTvcThreshold: number | null = null
+  try {
+    const { getAppSettings } = await import('@/features/settings/settings.server')
+    const settings = await getAppSettings()
+    if (settings.founder_dilution_threshold?.value) {
+      defaultFounderThreshold = parseFloat(settings.founder_dilution_threshold.value)
+    }
+    if (settings.tvc_dilution_threshold?.value) {
+      defaultTvcThreshold = parseFloat(settings.tvc_dilution_threshold.value)
+    }
+  } catch (e) {
+    console.warn('[CapTableTab] Could not load app_settings:', e)
+  }
+
   // Angels: strip sensitive fields before passing to client
   // (amount_invested, notes — filtered here, not at DB layer)
   const safeData =
@@ -46,6 +61,8 @@ export default async function CapTableTab({ companyId, companyName }: Props) {
       companyId={companyId}
       companyName={companyName}
       data={safeData}
+      defaultFounderThreshold={defaultFounderThreshold}
+      defaultTvcThreshold={defaultTvcThreshold}
     />
   )
 }

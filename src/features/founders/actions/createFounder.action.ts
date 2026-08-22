@@ -21,7 +21,7 @@ export async function createFounderAction(
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   const claims = await getClaims()
   if (!claims) return { success: false, error: 'Not authenticated.' }
-  if (claims.role !== 'internal') return { success: false, error: 'Not authorised.' }
+  if (claims.role !== 'internal' && claims.role !== 'admin') return { success: false, error: 'Not authorised.' }
 
   if (!input.full_name?.trim()) return { success: false, error: 'Full name is required.' }
   if (!input.email?.trim()) return { success: false, error: 'Email is required.' }

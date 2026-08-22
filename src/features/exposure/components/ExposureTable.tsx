@@ -22,6 +22,7 @@ interface ExposureTableProps {
   canEdit?: boolean
   holders?: HolderOption[]      
   tvcHolderIds?: string[]        // ← new
+  stalenessDays?: number
 }
 
 const VIEWS: { key: CapTableView; label: string }[] = [
@@ -81,11 +82,10 @@ const STATUS_STYLES: Record<string, string> = {
   Cancelled: 'text-red-600 bg-red-50 border-red-200',
 }
 
-const STALE_THRESHOLD_MS = 60 * 24 * 60 * 60 * 1000
-
-function isStale(dateStr: string | null): boolean {
+function isStale(dateStr: string | null, days: number = 90): boolean {
   if (!dateStr) return true
-  return Date.now() - new Date(dateStr).getTime() > STALE_THRESHOLD_MS
+  const thresholdMs = days * 24 * 60 * 60 * 1000
+  return Date.now() - new Date(dateStr).getTime() > thresholdMs
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -96,6 +96,7 @@ export default function ExposureTable({
   canEdit = false,
   holders = [],
   tvcHolderIds = [],
+  stalenessDays = 90,
 }: ExposureTableProps)  {
   const [view, setView] = useState<CapTableView>('full-equity')
   const [isCreating, setIsCreating] = useState(false)

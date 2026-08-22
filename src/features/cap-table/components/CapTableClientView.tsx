@@ -11,6 +11,7 @@ import { CapTableStatusBadge, OwnershipStatusBadge, AlertPill } from './CapTable
 import { formatPct, formatCurrency, isFounderDilutionAlert, isTvcDilutionAlert } from '../utils/derive'
 import { INVESTMENT_ROUNDS, CURRENCIES } from '../types'
 import type { CapTableOwnershipViewModel } from '../types'
+import { FormSelect } from '@/components/ui/form-select'
 
 // ─────────────────────────────────────────────────────────────
 
@@ -18,6 +19,8 @@ interface Props {
   companyId: string
   companyName: string
   data: CapTableOwnershipViewModel | null
+  defaultFounderThreshold?: number | null
+  defaultTvcThreshold?: number | null
 }
 
 // ── Shared label + input layout ───────────────────────────────
@@ -70,7 +73,13 @@ const selectClass =
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────
 
-export default function CapTableClientView({ companyId, companyName, data }: Props) {
+export default function CapTableClientView({
+  companyId,
+  companyName,
+  data,
+  defaultFounderThreshold,
+  defaultTvcThreshold,
+}: Props) {
   const [editing, setEditing] = useState(data === null) // open in edit if no record yet
   const [isPending, startTransition] = useTransition()
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -100,8 +109,8 @@ export default function CapTableClientView({ companyId, companyName, data }: Pro
   if (data) {
     if (data.capTableStatus === 'Red') alerts.push('Missing cap table')
     if (data.capTableStatus === 'Amber') alerts.push('Cap table outdated')
-    if (isFounderDilutionAlert(data)) alerts.push('Founder dilution exceeds threshold')
-    if (isTvcDilutionAlert(data)) alerts.push('TVC ownership dilution exceeds threshold')
+    if (isFounderDilutionAlert(data, defaultFounderThreshold)) alerts.push('Founder dilution exceeds threshold')
+    if (isTvcDilutionAlert(data, defaultTvcThreshold)) alerts.push('TVC ownership dilution exceeds threshold')
   }
 
   // ─────────────────────────────────────────────────────────
@@ -351,16 +360,15 @@ export default function CapTableClientView({ companyId, companyName, data }: Pro
             </Field>
 
             <Field label="Investment round">
-              <select
+              <FormSelect
                 name="investment_round"
                 defaultValue={data?.investment_round ?? ''}
-                className={selectClass}
               >
                 <option value="">Select round</option>
                 {INVESTMENT_ROUNDS.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
-              </select>
+              </FormSelect>
             </Field>
 
             <Field label="Amount invested">
@@ -376,15 +384,14 @@ export default function CapTableClientView({ companyId, companyName, data }: Pro
             </Field>
 
             <Field label="Currency">
-              <select
+              <FormSelect
                 name="currency"
                 defaultValue={data?.currency ?? 'USD'}
-                className={selectClass}
               >
                 {CURRENCIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
-              </select>
+              </FormSelect>
             </Field>
 
           </div>

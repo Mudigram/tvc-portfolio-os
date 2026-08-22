@@ -9,6 +9,7 @@ import { createExposureRow } from '../actions/exposure.actions'
 import { HolderPicker } from './HolderPicker'
 import type { HolderOption } from '../services/holders.service'
 import type { ExposureType, ExposureStatus } from '../types'
+import { FormSelect } from '@/components/ui/form-select'
 
 const EXPOSURE_TYPES: ExposureType[] = [
   'Equity',
@@ -123,12 +124,12 @@ export function ExposureCreateForm({
         {/* ── Instrument fields ─────────────────────────────── */}
         <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3 lg:grid-cols-4 pt-2 border-t border-zinc-200/60">
           <Field label="Instrument type">
-            <select name="exposure_type" className={selectClass} required>
+            <FormSelect name="exposure_type" required>
               <option value="">Select type</option>
               {EXPOSURE_TYPES.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
-            </select>
+            </FormSelect>
           </Field>
 
           <Field label="Instrument name">
@@ -177,11 +178,11 @@ export function ExposureCreateForm({
           </Field>
 
           <Field label="Status">
-            <select name="status" defaultValue="Active" className={selectClass}>
+            <FormSelect name="status" defaultValue="Active">
               {EXPOSURE_STATUSES.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
-            </select>
+            </FormSelect>
           </Field>
 
           <Field label="Last verified date">

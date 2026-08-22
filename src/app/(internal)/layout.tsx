@@ -4,7 +4,7 @@ import { getClaims } from '@/features/auth/services/auth.server'
 
 export default async function InternalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <RoleShell allowedRoles={['internal']}>
+    <RoleShell allowedRoles={['internal', 'admin']}>
       <InternalShell>{children}</InternalShell>
     </RoleShell>
   )
@@ -12,8 +12,9 @@ export default async function InternalLayout({ children }: { children: React.Rea
 
 async function InternalShell({ children }: { children: React.ReactNode }) {
   const claims = await getClaims()
+  const activeRole = claims?.role === 'admin' ? 'admin' : 'internal'
   return (
-    <AppShell role="internal" email={claims!.email}>
+    <AppShell role={activeRole} email={claims!.email}>
       {children}
     </AppShell>
   )

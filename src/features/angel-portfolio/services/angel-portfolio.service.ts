@@ -43,14 +43,16 @@ export async function getAngelPortfolio(userId: string): Promise<{
     .select(`
       id,
       exposure_id,
-      economic_exposure (
+      exposure_positions (
         id,
         exposure_type,
         instrument_name,
-        amount_invested,
         ownership_pct,
         issue_date,
         status,
+        exposure_events (
+          amount
+        ),
         companies (
           id,
           name,
@@ -96,9 +98,14 @@ export async function getAngelPortfolio(userId: string): Promise<{
   const companyMap = new Map<string, AngelCompanySummary>()
 
   for (const row of rows) {
-    const exposure = Array.isArray(row.economic_exposure)
-      ? row.economic_exposure[0]
-      : row.economic_exposure
+    const rawPos = Array.isArray(row.exposure_positions)
+      ? row.exposure_positions[0]
+      : row.exposure_positions
+    if (!rawPos) continue
+
+    const events = (rawPos.exposure_events ?? []) as { amount: number }[]
+    const amountInvested = events.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    const exposure = { ...rawPos, amount_invested: amountInvested }
 
     if (!exposure) continue
 
@@ -216,7 +223,7 @@ export async function getAngelActivityFeed(
   const { data: exposureData } = await supabase
     .from('angel_exposures')
     .select(`
-      economic_exposure (
+      exposure_positions (
         companies ( id, name )
       )
     `)
@@ -225,9 +232,9 @@ export async function getAngelActivityFeed(
   const companyIds = new Map<string, string>() // id → name
 
   for (const row of exposureData ?? []) {
-    const exposure = Array.isArray(row.economic_exposure)
-      ? row.economic_exposure[0]
-      : row.economic_exposure
+    const exposure = Array.isArray(row.exposure_positions)
+      ? row.exposure_positions[0]
+      : row.exposure_positions
     const company = Array.isArray(exposure?.companies)
       ? exposure.companies[0]
       : exposure?.companies
@@ -347,15 +354,15 @@ export async function getAngelCompanyDetail(
     const { data: exposureData, error: exposureError } = await supabase
       .from('angel_exposures')
       .select(`
-        economic_exposure (
+        exposure_positions (
           id,
           exposure_type,
           instrument_name,
-          amount_invested,
           ownership_pct,
           issue_date,
           status,
-          company_id
+          company_id,
+          exposure_events ( amount )
         )
       `)
       .eq('user_id', userId)
@@ -365,10 +372,16 @@ export async function getAngelCompanyDetail(
     // Filter to only the exposures that belong to this company
     const companyExposures = exposureData
       .map((row) => {
-        const exp = Array.isArray(row.economic_exposure)
-          ? row.economic_exposure[0]
-          : row.economic_exposure
-        return exp
+        const raw = Array.isArray(row.exposure_positions)
+          ? row.exposure_positions[0]
+          : row.exposure_positions
+        if (!raw) return null
+        const events = (raw.exposure_events ?? []) as { amount: number }[]
+        const amountInvested = events.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+        return {
+          ...raw,
+          amount_invested: amountInvested,
+        }
       })
       .filter((exp): exp is NonNullable<typeof exp> =>
         exp !== null && exp.company_id === companyId

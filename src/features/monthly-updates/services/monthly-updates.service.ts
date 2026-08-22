@@ -1,10 +1,20 @@
 // src/features/monthly-updates/services/monthly-updates.service.ts
-import type { SupabaseClient } from '@supabase/supabase-js' // Import the client type
-import type { MonthlyUpdate, UpdateStatusInfo } from '@/features/monthly-updates/types'
+import { createServerClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { MonthlyUpdate, ReportingTarget, UpdateStatusInfo } from '@/features/monthly-updates/types'
 
 // ─── Get all updates for a company ──────────────────────────────────────────
-// Pass the initialized supabase client instance directly into the function
-export async function getCompanyUpdates(supabase: SupabaseClient, companyId: string): Promise<MonthlyUpdate[]> {
+export async function getCompanyUpdates(
+  clientOrCompanyId: SupabaseClient | string,
+  companyIdParam?: string
+): Promise<MonthlyUpdate[]> {
+  const supabase = typeof clientOrCompanyId === 'string'
+    ? await createServerClient()
+    : clientOrCompanyId
+
+  const companyId = typeof clientOrCompanyId === 'string'
+    ? clientOrCompanyId
+    : companyIdParam!
   const { data, error } = await supabase
     .from('monthly_updates')
     .select('*')
@@ -20,19 +30,44 @@ export async function getCompanyUpdates(supabase: SupabaseClient, companyId: str
   return data ?? []
 }
 
+// ─── Get reporting targets for a company ────────────────────────────────────
+export async function getCompanyReportingTargets(
+  companyId: string,
+  month?: number,
+  year?: number
+): Promise<ReportingTarget[]> {
+  const supabase = await createServerClient()
+  let query = supabase
+    .from('reporting_targets')
+    .select('*')
+    .eq('company_id', companyId)
+
+  if (month != null) query = query.eq('month', month)
+  if (year != null) query = query.eq('year', year)
+
+  const { data, error } = await query.order('year', { ascending: false }).order('month', { ascending: false })
+
+  if (error) {
+    console.error('[monthly-updates.service] getCompanyReportingTargets error:', error.message)
+    return []
+  }
+
+  return data ?? []
+}
+
 // ─── Compute the status summary ──────────────────────────────────────────────
 export function computeUpdateStatus(updates: MonthlyUpdate[]): UpdateStatusInfo {
   const now = new Date()
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
 
-  const submitted = updates.filter((u) => u.status === 'Submitted')
+  const activeSubmissions = updates.filter((u) => u.status === 'Submitted' || u.status === 'Verified')
 
-  const hasCurrentPeriodUpdate = submitted.some(
+  const hasCurrentPeriodUpdate = activeSubmissions.some(
     (u) => u.month === currentMonth && u.year === currentYear
   )
 
-  if (submitted.length === 0) {
+  if (activeSubmissions.length === 0) {
     return {
       hasCurrentPeriodUpdate: false,
       hasRecentUpdate: false,
@@ -42,7 +77,7 @@ export function computeUpdateStatus(updates: MonthlyUpdate[]): UpdateStatusInfo 
     }
   }
 
-  const latest = submitted[0]
+  const latest = activeSubmissions[0]
   const lastDate = latest.submitted_at ? new Date(latest.submitted_at) : new Date()
   const diffDays = Math.ceil(
     Math.abs(now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)

@@ -3,9 +3,9 @@ import { getClaims } from '@/features/auth/services/auth.server'
 import {
   getFounderCompanyId,
   getFounderCompanyData,
+  getFounderRowByUserId,
 } from '@/features/founder-portal/services/founder-portal.service'
 import { FounderCompanyView } from '@/features/founder-portal/components/FounderCompanyView'
-import { createServerClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'My Company — TVCLabs' }
 
@@ -29,15 +29,10 @@ export default async function MyCompanyPage() {
     )
   }
 
-  // Get the founders.id for this auth user — needed to find their holder row
-  const supabase = await createServerClient()
-  const { data: founderRow } = await supabase
-    .from('founders')
-    .select('id')
-    .eq('user_id', claims.userId)
-    .single()
+  // Get the founder row for this auth user via service layer
+  const founderRow = await getFounderRowByUserId(claims.userId)
 
-  const data = await getFounderCompanyData(companyId, founderRow!.id)
+  const data = await getFounderCompanyData(companyId, founderRow?.id)
 
   if (!data) {
     return (

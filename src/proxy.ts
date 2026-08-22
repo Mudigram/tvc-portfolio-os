@@ -111,6 +111,7 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
     '/companies',
     '/founders',
     '/exposure',
+    '/reconciliation',
     '/advisory',
     '/settings',
     '/campaigns',
@@ -123,7 +124,7 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
 
   const founderRoutes = ['/my-company', '/submit-update', '/documents']
 
-  if (role === 'internal') {
+  if (role === 'internal' || role === 'admin') {
     return (
       internalRoutes.some((r) => pathname === r || pathname.startsWith(r + '/')) ||
       angelRoutes.some((r) => pathname === r || pathname.startsWith(r + '/')) ||
@@ -148,6 +149,7 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
 
 function getRoleDashboard(role: UserRole): string {
   const dashboards: Record<UserRole, string> = {
+    admin: '/dashboard',
     internal: '/dashboard',
     angel: '/portfolio',
     founder: '/my-company',

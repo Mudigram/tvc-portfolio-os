@@ -15,11 +15,11 @@ export async function updateHealthAction(
     return { success: false, error: 'Not authenticated.' }
   }
 
-  if (claims.role !== 'internal') {
+  if (claims.role !== 'internal' && claims.role !== 'admin') {
     return { success: false, error: 'Not authorised.' }
   }
 
-  const result = await updateCompanyHealth(companyId, claims.userId, payload)
+  const result = await updateCompanyHealth(companyId, claims.email, payload)
 
   if (result.success) {
     revalidatePath(`/companies/${companyId}`)

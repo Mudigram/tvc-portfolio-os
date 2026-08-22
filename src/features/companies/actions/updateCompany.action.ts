@@ -11,6 +11,13 @@ export interface UpdateCompanyInput {
   country: string | null
   website: string | null
   legal_entity: string | null
+  logo_url?: string | null
+  bio?: string | null
+  investment_date?: string | null
+  instrument_type?: string | null
+  amount_invested?: number | null
+  currency?: string | null
+  syndicate_holdings?: string | null
 }
 
 export async function updateCompanyAction(
@@ -19,7 +26,7 @@ export async function updateCompanyAction(
 ): Promise<{ success: boolean; error?: string }> {
   const claims = await getClaims()
   if (!claims) return { success: false, error: 'Not authenticated.' }
-  if (claims.role !== 'internal') return { success: false, error: 'Not authorised.' }
+  if (claims.role !== 'internal' && claims.role !== 'admin') return { success: false, error: 'Not authorised.' }
   if (!input.name?.trim()) return { success: false, error: 'Company name is required.' }
 
   const supabase = await createServerClient()
@@ -33,6 +40,9 @@ export async function updateCompanyAction(
       country: input.country?.trim() || null,
       website: input.website?.trim() || null,
       legal_entity: input.legal_entity || null,
+      logo_url: input.logo_url?.trim() || null,
+      bio: input.bio?.trim() || null,
+      syndicate_holdings: input.syndicate_holdings?.trim() || null,
     })
     .eq('id', companyId)
 

@@ -60,14 +60,14 @@ export async function submitUpdateAction(
   // ↑ .maybeSingle() returns null if no row found. .single() would error.
 
   if (existing) {
-    if (existing.status !== 'Draft') {
+    if (existing.status !== 'Draft' && existing.status !== 'Needs Correction') {
       return {
         success: false,
-        error: `An update for ${input.month}/${input.year} has already been submitted.`,
+        error: `An update for ${input.month}/${input.year} has already been submitted and is currently ${existing.status}.`,
       }
     }
 
-    // Update the existing draft
+    // Update the existing draft or resubmit corrected update
     const { error } = await supabase
       .from('monthly_updates')
       .update({

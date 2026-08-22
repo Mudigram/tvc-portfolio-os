@@ -40,15 +40,15 @@ export default function CompanyTabs({ company, updatesTabElement, fundingTabElem
   const [active, setActive] = useState<Tab>('Overview')
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Tab bar */}
-      <div className="flex items-center gap-0.5 border-b border-zinc-100">
+      <div className="flex items-center gap-0.5 border-b border-zinc-100 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActive(tab)}
             className={`
-              px-4 py-2.5 text-sm transition-colors relative
+              px-4 py-2.5 text-sm transition-colors relative whitespace-nowrap shrink-0
               ${active === tab
                 ? 'text-zinc-900 font-medium'
                 : 'text-zinc-400 hover:text-zinc-700'
@@ -67,7 +67,7 @@ export default function CompanyTabs({ company, updatesTabElement, fundingTabElem
       <div>
         {active === 'Overview'       && <CompanyOverviewTab company={company} />}
         {active === 'Exposure'       && exposureTabElement}
-        {active === 'Updates'        && updatesTabElement} {/* Render the slot node here */}
+        {active === 'Updates'        && updatesTabElement}
         {active === 'Funding'        && fundingTabElement}
         {active === 'Cap Tables'     && captableTabElement}
         {active === 'Advisory'       && advisoryTabElement}

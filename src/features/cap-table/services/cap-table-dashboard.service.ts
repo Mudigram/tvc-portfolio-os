@@ -112,7 +112,24 @@ export async function getCapTableDashboardData(): Promise<CapTableDashboardPaylo
 
   // Companies with no cap table row yet count as Red in the full view
   const missingRowCount = total - rawRows.length
-  const aggregated = aggregateRows(rawRows, total)
+
+  // Read configurable threshold settings with sane defaults
+  let defaultFounderThreshold: number | null = null
+  let defaultTvcThreshold: number | null = null
+  try {
+    const { getAppSettings } = await import('@/features/settings/settings.server')
+    const settings = await getAppSettings()
+    if (settings.founder_dilution_threshold?.value) {
+      defaultFounderThreshold = parseFloat(settings.founder_dilution_threshold.value)
+    }
+    if (settings.tvc_dilution_threshold?.value) {
+      defaultTvcThreshold = parseFloat(settings.tvc_dilution_threshold.value)
+    }
+  } catch (err) {
+    console.warn('[cap-table-dashboard] Could not load app_settings thresholds, using defaults:', err)
+  }
+
+  const aggregated = aggregateRows(rawRows, total, defaultFounderThreshold, defaultTvcThreshold)
   aggregated.status_red += missingRowCount
   aggregated.missing_cap_table = total - aggregated.has_current_cap_table
   aggregated.total_companies = total

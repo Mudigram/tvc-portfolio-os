@@ -95,6 +95,8 @@ export function applyFilters(
 export function aggregateRows(
   filteredRows: CapTableRawRow[],
   totalCompanies: number,
+  defaultFounderThreshold?: number | null,
+  defaultTvcThreshold?: number | null,
 ): Omit<CapTableDashboardData, 'alerts'> & { alerts: CapTableDashboardData['alerts'] } {
   let statusGreen = 0
   let statusAmber = 0
@@ -142,7 +144,7 @@ export function aggregateRows(
       else if (dilution <= 50) dilution26_50++
       else dilutionGt50++
 
-      const founderThreshold = row.founder_dilution_alert_threshold ?? 25
+      const founderThreshold = row.founder_dilution_alert_threshold ?? defaultFounderThreshold ?? 25
       if (dilution > founderThreshold) {
         alerts.push({ company_id: row.company_id, company_name: row.company_name, alert_type: 'founder_dilution' })
       }
@@ -161,7 +163,7 @@ export function aggregateRows(
       else if (change <= 10) ownershipDiluted5_10++
       else ownershipDilutedGt10++
 
-      const tvcThreshold = row.tvc_dilution_alert_threshold ?? 20
+      const tvcThreshold = row.tvc_dilution_alert_threshold ?? defaultTvcThreshold ?? 20
       if (change > tvcThreshold) {
         alerts.push({ company_id: row.company_id, company_name: row.company_name, alert_type: 'tvc_dilution' })
       }

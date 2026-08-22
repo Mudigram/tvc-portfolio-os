@@ -8,6 +8,8 @@ export interface FounderCompanyIdentity {
   stage: string | null
   country: string | null
   website: string | null
+  logo_url?: string | null
+  logo_path?: string | null
   founded_year: number | null
   portfolio_health: HealthStatus | null
   health_reviewed_at: string | null

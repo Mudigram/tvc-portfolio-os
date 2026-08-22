@@ -48,7 +48,7 @@ export async function previewRecipientsAction(
   formData: FormData,
 ): Promise<{ recipients: ResolvedRecipient[]; error?: string }> {
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { recipients: [], error: 'Unauthorised' }
   }
 
@@ -69,7 +69,7 @@ export async function sendCampaignAction(
   formData: FormData,
 ): Promise<SendCampaignResult> {
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { success: false, error: 'Unauthorised' }
   }
 

@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
 import { getCompanyProfile } from '@/features/companies/services/companies.services'
 import { getCompanyExposure } from '@/features/exposure/services/exposure.services'
 import CompanyTabs from '@/features/companies/components/CompanyTabs'
@@ -9,8 +8,9 @@ import CompanyAdvisoryTab from '@/features/advisory/components/CompanyAdvisoryTa
 import CompanyExitReadinessTab from '@/features/exit-readiness/components/CompanyExitReadinessTab'
 import CompanyDdrTab from '@/features/poem-ddr/components/CompanyDdrTab'
 import CapTableTab from '@/features/cap-table/components/CapTableTab'
-import CompanyExposureTab from '@/features/exposure/components/CompanyExposureTab' 
+import CompanyExposureTab from '@/features/exposure/components/CompanyExposureTab'
 import { getCompanyFundingData } from '@/features/funding/services/funding.service'
+import { CompanyHeader } from '@/features/companies/components/CompanyHeader'
 
 interface CompanyPageProps {
   params: Promise<{ id: string }>
@@ -18,16 +18,13 @@ interface CompanyPageProps {
 
 export default async function CompanyPage({ params }: CompanyPageProps) {
   const resolvedParams = await params
-  const supabase = await createServerClient()
-  
 
   const company = await getCompanyProfile(resolvedParams.id)
   if (!company) notFound()
 
-  const exposureRows = await getCompanyExposure(supabase, resolvedParams.id)
-  const { rounds } = await getCompanyFundingData(supabase, resolvedParams.id)
+  const exposureRows = await getCompanyExposure(resolvedParams.id)
+  const { rounds } = await getCompanyFundingData(resolvedParams.id)
 
-  // 1. Pre-render the Exposure Tab safely on the server 
   const exposureTabElement = (
     <CompanyExposureTab
       companyId={resolvedParams.id}
@@ -36,40 +33,32 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
     />
   )
 
-  const updatesElement = <CompanyUpdatesTab companyId={resolvedParams.id} />
-  const fundingElement = <CompanyFundingTab companyId={resolvedParams.id} />
+  const updatesElement  = <CompanyUpdatesTab  companyId={resolvedParams.id} />
+  const fundingElement  = <CompanyFundingTab  companyId={resolvedParams.id} />
   const advisoryElement = <CompanyAdvisoryTab companyId={resolvedParams.id} />
-  const exitElement = <CompanyExitReadinessTab companyId={resolvedParams.id} />
+  const exitElement     = <CompanyExitReadinessTab companyId={resolvedParams.id} />
   const captableElement = <CapTableTab companyId={resolvedParams.id} companyName={company.name} />
-  const ddrElement = <CompanyDdrTab companyId={resolvedParams.id} />
+  const ddrElement      = <CompanyDdrTab companyId={resolvedParams.id} />
 
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-1">
-          Company
-        </p>
-        <h1 className="text-2xl font-medium text-zinc-900 tracking-tight">
-          {company.name}
-        </h1>
-        {(company.stage || company.sector) && (
-          <p className="text-sm text-zinc-400 mt-1">
-            {[company.stage, company.sector].filter(Boolean).join(' · ')}
-          </p>
-        )}
-      </div>
+    <div className="space-y-0">
+      {/* ── Persistent company header ────────────────────────── */}
+      <CompanyHeader company={company} />
 
-      <CompanyTabs 
-        company={company} 
-        exposureRows={exposureRows}
-        exposureTabElement={exposureTabElement} 
-        updatesTabElement={updatesElement} 
-        fundingTabElement={fundingElement}
-        advisoryTabElement={advisoryElement}
-        exitTabElement={exitElement}
-        captableTabElement={captableElement}
-        ddrTabElement={ddrElement}
-      />
+      {/* ── Tabs + content ───────────────────────────────────── */}
+      <div className="pt-6">
+        <CompanyTabs
+          company={company}
+          exposureRows={exposureRows}
+          exposureTabElement={exposureTabElement}
+          updatesTabElement={updatesElement}
+          fundingTabElement={fundingElement}
+          advisoryTabElement={advisoryElement}
+          exitTabElement={exitElement}
+          captableTabElement={captableElement}
+          ddrTabElement={ddrElement}
+        />
+      </div>
     </div>
   )
 }

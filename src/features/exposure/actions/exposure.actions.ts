@@ -38,7 +38,7 @@ export async function updateExposureRow(
   formData: FormData,
 ): Promise<UpdateExposureResult> {
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { success: false, error: 'Unauthorised' }
   }
 
@@ -74,24 +74,36 @@ export async function updateExposureRow(
   const supabase = await createServerClient()
 
   const { error } = await supabase
-    .from('economic_exposure')
+    .from('exposure_positions')
     .update({
       exposure_type,
       instrument_name,
       issue_date,
-      amount_invested,
       ownership_pct,
       share_class,
       status,
       last_verified_date,
       // Record who verified and when — uses the internal user's id
-      ...(last_verified_date ? { verified_by: claims.userId } : {}),
+      ...(last_verified_date ? { verified_by: claims.email } : {}),
     })
     .eq('id', exposureId)
 
   if (error) {
     console.error('[exposure] update error:', error.message)
     return { success: false, error: error.message }
+  }
+
+  // If amount_invested is provided, insert a position event update if needed
+  if (amount_invested !== null) {
+    const today = new Date().toISOString().split('T')[0]
+    await supabase.from('exposure_events').insert({
+      position_id: exposureId,
+      event_type: 'investment',
+      effective_date: issue_date || today,
+      amount: amount_invested,
+      currency: 'USD',
+      created_by: claims.userId,
+    })
   }
 
   revalidatePath(`/companies/${companyId}`)
@@ -113,7 +125,7 @@ export async function createExposureRow(
   formData: FormData,
 ): Promise<CreateExposureResult> {
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { success: false, error: 'Unauthorised' }
   }
 
@@ -210,9 +222,9 @@ export async function createExposureRow(
    return { success: false, error: 'Could not resolve holder' }
  }
 
- // ── Insert the exposure row ──────────────────────────────────
+ // ── Insert the position row ──────────────────────────────────
  const { data: newExposure, error: exposureError } = await supabase
-   .from('economic_exposure')
+   .from('exposure_positions')
    .insert({
      company_id: companyId,
      holder_id: resolvedHolderId,
@@ -220,7 +232,6 @@ export async function createExposureRow(
      exposure_type,
      instrument_name,
      issue_date,
-     amount_invested,
      ownership_pct,
      share_class,
      status,
@@ -239,4 +250,22 @@ export async function createExposureRow(
   revalidatePath('/exposure')
 
   return { success: true, exposureId: newExposure.id }
+}
+
+// ── Reconcile a position (Master Ledger) ─────────────────────
+export async function reconcilePositionAction(
+  positionId: string,
+  companyId?: string
+): Promise<{ success: boolean; error?: string }> {
+  const { reconcilePosition } = await import('@/features/exposure/services/exposure-events.service')
+  const result = await reconcilePosition(positionId)
+
+  if (result.success) {
+    if (companyId) revalidatePath(`/companies/${companyId}`)
+    revalidatePath('/exposure')
+    revalidatePath('/reconciliation')
+    revalidatePath('/settings')
+  }
+
+  return result
 }

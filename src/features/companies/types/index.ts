@@ -3,6 +3,8 @@ export interface CompanyCardData {
     name: string
     sector: string | null
     stage: string | null
+    logo_url: string | null
+    logo_path: string | null
   
     portfolio_health: 'Green' | 'Amber' | 'Red' | null
     health_reviewed_at: string | null
@@ -28,6 +30,16 @@ export interface CompanyProfile {
     last_verified_date: string | null
     verified_by: string | null
   
+    // Identity extension fields
+    logo_url: string | null
+    logo_path?: string | null
+    bio: string | null
+    investment_date: string | null
+    instrument_type: string | null
+    amount_invested: number | null
+    currency: string | null
+    syndicate_holdings: string | null
+
     // Health
     portfolio_health: 'Green' | 'Amber' | 'Red' | null
     health_reviewed_at: string | null
@@ -40,7 +52,28 @@ export interface CompanyProfile {
       full_name: string
       email: string
     } | null
+
+    // Linked figure source documents
+    figure_documents: FigureDocument[]
   }
+
+  export type ReconciliationStatus = 'Unverified' | 'Pending' | 'Reconciled' | 'Discrepancy'
+
+  export interface FigureDocument {
+    id: string
+    company_id: string
+    figure_key: string
+    document_name: string
+    file_path: string | null
+    file_url: string
+    file_size: number | null
+    mime_type: string | null
+    uploaded_at: string
+    uploaded_by: string | null
+    reconciliation_status: ReconciliationStatus
+    reconciliation_notes: string | null
+  }
+
   
   // Health update payload
   export interface HealthUpdatePayload {

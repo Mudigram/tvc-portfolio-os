@@ -87,7 +87,7 @@ export default function HealthEditForm({ companyId, current }: HealthEditFormPro
         <p className="text-xs text-zinc-400">
           Last reviewed {formatDate(current.health_reviewed_at)}
           {current.health_reviewed_by && (
-            <> · by <span className="text-zinc-500">{current.health_reviewed_by}</span></>
+            <> · by <span className="text-zinc-500">{current.health_reviewed_by.split('@')[0]}</span></>
           )}
         </p>
       )}

@@ -8,6 +8,7 @@
 import { useState, useTransition } from 'react'
 import { updateExposureRow } from '../actions/exposure.actions'
 import type { ExposureRow, ExposureType, ExposureStatus } from '../types'
+import { FormSelect } from '@/components/ui/form-select'
 
 const EXPOSURE_TYPES: ExposureType[] = [
   'Equity',
@@ -109,15 +110,14 @@ export function ExposureEditForm({ row, companyId, onClose, onSaved }: Props) {
         <div className="grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
 
           <Field label="Instrument type">
-            <select
+            <FormSelect
               name="exposure_type"
               defaultValue={row.exposure_type}
-              className={selectClass}
             >
               {EXPOSURE_TYPES.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
-            </select>
+            </FormSelect>
           </Field>
 
           <Field label="Instrument name">
@@ -175,15 +175,14 @@ export function ExposureEditForm({ row, companyId, onClose, onSaved }: Props) {
           </Field>
 
           <Field label="Status">
-            <select
+            <FormSelect
               name="status"
               defaultValue={row.status}
-              className={selectClass}
             >
               {EXPOSURE_STATUSES.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
-            </select>
+            </FormSelect>
           </Field>
 
           <Field label="Last verified date">

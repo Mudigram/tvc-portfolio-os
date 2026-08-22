@@ -34,6 +34,20 @@ export async function getAppSettings(): Promise<SettingsMap> {
   ) as SettingsMap
 }
 
+export async function getStalenessThresholdDays(): Promise<number> {
+  try {
+    const settings = await getAppSettings()
+    const rawVal = settings.staleness_threshold_days?.value
+    if (rawVal) {
+      const parsed = parseInt(rawVal, 10)
+      if (!isNaN(parsed) && parsed > 0) return parsed
+    }
+  } catch (err) {
+    console.warn('[settings] getStalenessThresholdDays fallback to 90:', err)
+  }
+  return 90
+}
+
 // ── 2. Fetch all users for user management ────────────────────
 // Requires service role — auth.users is not accessible via anon/authed key
 export async function getManagedUsers(): Promise<ManagedUser[]> {

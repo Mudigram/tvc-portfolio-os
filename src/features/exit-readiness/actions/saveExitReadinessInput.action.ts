@@ -12,7 +12,7 @@ export async function saveExitReadinessAction(input: SaveExitReadinessInput) {
     if (authError || !user) return { success: false, error: 'Unauthorized session.' }
     
     const role = user.user_metadata?.role || user.app_metadata?.role
-    if (role !== 'internal') return { success: false, error: 'Access restricted to internal managers.' }
+    if (role !== 'internal' && role !== 'admin') return { success: false, error: 'Access restricted to internal managers.' }
 
     const todayDate = new Date().toISOString().split('T')[0]
 

@@ -16,7 +16,7 @@ import type {
 // ── Guard — all settings actions are internal only ────────────
 async function guardInternal(): Promise<SettingsActionResult | null> {
   const claims = await getClaims()
-  if (!claims || claims.role !== 'internal') {
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return { success: false, error: 'Unauthorised' }
   }
   return null

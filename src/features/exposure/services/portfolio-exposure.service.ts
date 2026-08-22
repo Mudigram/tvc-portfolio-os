@@ -13,19 +13,20 @@ import { TVCLABS_HOLDER_IDS } from '@/features/exposure/types'
  * Active instruments only — Converted, Exited, Cancelled are excluded
  * so they don't inflate deployed capital figures.
  */
-export async function getPortfolioExposure(): Promise<PortfolioExposureData> {
+export async function getPortfolioExposure(asOfDate?: string): Promise<PortfolioExposureData> {
   const supabase = await createServerClient()
 
-  const { data, error } = await supabase
-    .from('economic_exposure')
+  let query = supabase
+    .from('exposure_positions')
     .select(`
       id,
       holder_id,
       holder_type,
       exposure_type,
-      amount_invested,
       ownership_pct,
       status,
+      issue_date,
+      created_at,
       companies (
         id,
         name,
@@ -39,10 +40,21 @@ export async function getPortfolioExposure(): Promise<PortfolioExposureData> {
       ),
       holders (
         name
+      ),
+      exposure_events (
+        amount,
+        event_type,
+        effective_date
       )
     `)
-    .eq('status', 'Active')
     .order('companies(name)')
+
+  // When querying current state (no asOfDate), filter by Active status
+  if (!asOfDate) {
+    query = query.eq('status', 'Active')
+  }
+
+  const { data, error } = await query
 
   if (error) {
     console.error('[portfolio-exposure.service] error:', error.message)
@@ -59,7 +71,45 @@ export async function getPortfolioExposure(): Promise<PortfolioExposureData> {
     }
   }
 
-  const rows = data ?? []
+  // Map and reconstruct historical status per position
+  const rows = (data ?? [])
+    .map((r) => {
+      const allEvents = (r.exposure_events ?? []) as { amount: number; event_type?: string; effective_date: string }[]
+      
+      // Events on or prior to asOfDate
+      const validEvents = allEvents.filter(
+        (e) => !asOfDate || (e.effective_date && e.effective_date <= asOfDate)
+      )
+      
+      const amountInvested = validEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+      // Evaluate historical status on asOfDate
+      let effectiveStatus = r.status
+      if (asOfDate) {
+        // Exclude positions created after asOfDate
+        const issueOrCreated = r.issue_date || r.created_at?.split('T')[0]
+        if (issueOrCreated && issueOrCreated > asOfDate) {
+          effectiveStatus = 'Inactive'
+        } else if (['Converted', 'Exited', 'Cancelled'].includes(r.status)) {
+          // Check if the conversion/exit event occurred on or before asOfDate
+          const terminalEvent = allEvents.find(
+            (e) => ['Conversion', 'Exit', 'Cancellation'].includes(e.event_type || '') &&
+                   e.effective_date && e.effective_date <= asOfDate
+          )
+          // If no terminal event occurred before asOfDate, position was Active as of date
+          if (!terminalEvent) {
+            effectiveStatus = 'Active'
+          }
+        }
+      }
+
+      return {
+        ...r,
+        status: effectiveStatus,
+        amount_invested: amountInvested,
+      }
+    })
+    .filter((r) => r.status === 'Active' && (r.amount_invested > 0 || !asOfDate))
 
   // ── Portfolio summary ──────────────────────────────────────────────────────
 

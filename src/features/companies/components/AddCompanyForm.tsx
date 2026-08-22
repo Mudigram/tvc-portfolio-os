@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createCompanyAction } from '@/features/companies/actions/createCompany.action'
 import type { CreateCompanyInput } from '@/features/companies/actions/createCompany.action'
+import { FormSelect } from '@/components/ui/form-select'
 import { useToast } from '@/hooks/use-toast'
 
 const SECTORS = [
@@ -111,27 +112,25 @@ export function AddCompanyForm({ onClose }: AddCompanyFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Sector
               </label>
-              <select
+              <FormSelect
                 value={form.sector}
                 onChange={(e) => set('sector', e.target.value)}
-                className="w-full h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="">Select sector</option>
                 {SECTORS.map((s) => <option key={s}>{s}</option>)}
-              </select>
+              </FormSelect>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Stage
               </label>
-              <select
+              <FormSelect
                 value={form.stage}
                 onChange={(e) => set('stage', e.target.value)}
-                className="w-full h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="">Select stage</option>
                 {STAGES.map((s) => <option key={s}>{s}</option>)}
-              </select>
+              </FormSelect>
             </div>
           </div>
 

@@ -1,3 +1,4 @@
+import { createServerClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { FundingRound, FundingStatus, CompanyFundingSummary } from '../types/index'
 
@@ -5,9 +6,16 @@ import type { FundingRound, FundingStatus, CompanyFundingSummary } from '../type
  * Single data query fetching both history logs and current state arrays concurrently
  */
 export async function getCompanyFundingData(
-  supabase: SupabaseClient, 
-  companyId: string
+  clientOrCompanyId: SupabaseClient | string, 
+  companyIdParam?: string
 ): Promise<{ rounds: FundingRound[]; status: FundingStatus | null }> {
+  const supabase = typeof clientOrCompanyId === 'string'
+    ? await createServerClient()
+    : clientOrCompanyId
+
+  const companyId = typeof clientOrCompanyId === 'string'
+    ? clientOrCompanyId
+    : companyIdParam!
   
   // Parallel fetch optimizes performance pipeline speeds
   const [roundsResult, statusResult] = await Promise.all([

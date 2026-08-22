@@ -2,20 +2,35 @@
 // This mirrors your database columns. Every field that comes back from Supabase
 // gets a type here. If a column can be null in the DB, it's null here too.
 
-export type UpdateStatus = 'Draft' | 'Submitted' | 'Reviewed'
+export type UpdateStatus = 'Draft' | 'Submitted' | 'Verified' | 'Needs Correction'
 
 export interface MonthlyUpdate {
   id: string
   company_id: string
-  month: number           // 1–12. Not a Date — just a number. Easier to work with.
+  month: number           // 1–12
   year: number
   achievements: string
   challenges: string
   targets: string
-  submitted_by: string    // Email of whoever submitted it
-  submitted_at: string | null   // null if it's still a Draft
+  submitted_by: string
+  submitted_at: string | null
   status: UpdateStatus
+  review_notes?: string | null
+  reviewed_at?: string | null
+  reviewed_by?: string | null
   created_at: string
+}
+
+export interface ReportingTarget {
+  id: string
+  company_id: string
+  month: number
+  year: number
+  target_revenue: number | null
+  target_mrr: number | null
+  key_milestones: string | null
+  created_at: string
+  created_by: string | null
 }
 
 // ─── What the form sends to the server action ───────────────────────────────

@@ -1,3 +1,4 @@
+import { createServerClient } from '@/lib/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AdvisoryActivity, AdvisorRosterItem } from '../types'
 
@@ -5,9 +6,16 @@ import type { AdvisoryActivity, AdvisorRosterItem } from '../types'
  * Concurrently loads historical advisory events and official cap-table advisor rosters
  */
 export async function getCompanyAdvisoryData(
-  supabase: SupabaseClient,
-  companyId: string
+  clientOrCompanyId: SupabaseClient | string,
+  companyIdParam?: string
 ): Promise<{ activities: AdvisoryActivity[]; roster: AdvisorRosterItem[] }> {
+  const supabase = typeof clientOrCompanyId === 'string'
+    ? await createServerClient()
+    : clientOrCompanyId
+
+  const companyId = typeof clientOrCompanyId === 'string'
+    ? clientOrCompanyId
+    : companyIdParam!
 
   const [activitiesResult, rosterResult] = await Promise.all([
     // Fetch logs ordered newest first
@@ -17,9 +25,9 @@ export async function getCompanyAdvisoryData(
       .eq('company_id', companyId)
       .order('session_date', { ascending: false }),
       
-    // Fetch active advisors from Cap Table (economic_exposure)
+    // Fetch active advisors from Cap Table (exposure_positions)
     supabase
-      .from('economic_exposure')
+      .from('exposure_positions')
       .select(`
         id,
         instrument_name,

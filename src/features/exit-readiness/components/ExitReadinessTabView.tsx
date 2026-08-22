@@ -5,6 +5,7 @@ import { useRole } from '@/hooks/useRole'
 import { saveExitReadinessAction } from '../actions/saveExitReadinessInput.action'
 import type { ExitReadinessData, ReadinessSignal } from '../types'
 import { useToast } from '@/hooks/use-toast'
+import { FormSelect } from '@/components/ui/form-select'
 
 interface ExitReadinessTabViewProps {
   companyId: string;
@@ -14,7 +15,7 @@ interface ExitReadinessTabViewProps {
 export default function ExitReadinessTabView({ companyId, initialData }: ExitReadinessTabViewProps) {
   const { role } = useRole()
   const { toast } = useToast()
-  const isInternal = role === 'internal'
+  const isInternal = role === 'internal' || role === 'admin'
 
   // Input states bounded strictly on a 0-5 scale
   const [readiness, setReadiness] = useState<ReadinessSignal>(initialData?.overall_readiness ?? 'Early')
@@ -137,7 +138,7 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
 
           {initialData?.last_verified_date && (
             <p className="text-[11px] text-zinc-400 italic">
-              Audit matrix updated by {initialData.verified_by} on {new Date(initialData.last_verified_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              Audit matrix updated by {initialData.verified_by?.split('@')[0]} on {new Date(initialData.last_verified_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           )}
         </div>
@@ -157,11 +158,11 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
 
               <div>
                 <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">M&A Liquidity Tier</label>
-                <select value={readiness} onChange={(e) => setReadiness(e.target.value as ReadinessSignal)} className="w-full border p-2 bg-white text-sm rounded">
+                <FormSelect value={readiness} onChange={(e) => setReadiness(e.target.value as ReadinessSignal)}>
                   <option value="Early">Early Stage Framework</option>
                   <option value="Progressing">Progressing Tracks</option>
                   <option value="Ready">Ready for Exit Liquidity</option>
-                </select>
+                </FormSelect>
               </div>
 
               {/* Dynamic Sliders mapped to check boundaries [0-5] */}
@@ -182,8 +183,13 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
                 ))}
               </div>
 
-              <button type="submit" disabled={saving} className="w-full h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors mt-2">
-                {saving ? 'Syncing audit parameters…' : 'Commit Matrix Updates'}
+              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+                {saving ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Syncing audit parameters…
+                  </>
+                ) : 'Commit Matrix Updates'}
               </button>
             </form>
           )}

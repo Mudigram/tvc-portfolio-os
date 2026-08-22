@@ -7,10 +7,12 @@ interface UpdateCardProps {
 }
 
 export function UpdateCard({ update, isLatest = false }: UpdateCardProps) {
-    const statusColors = {
+    const statusColors: Record<string, string> = {
         Draft: 'bg-gray-100 text-gray-700 border-gray-200',
         Submitted: 'bg-blue-100 text-blue-700 border-blue-200',
-        Reviewed: 'bg-emerald-100 text-emerald-700 border-emerald-200'
+        Reviewed: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        Verified: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'Needs Correction': 'bg-amber-100 text-amber-700 border-amber-200',
     };
     
     const monthNames = [

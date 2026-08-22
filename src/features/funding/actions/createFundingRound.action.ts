@@ -16,7 +16,7 @@ export async function createFundingRoundAction(input: FundingRoundInput) {
     }
 
     // ── Step 2: Clear Internal Authorization Check ───────────────────────────
-    if (claims.role !== 'internal') {
+    if (claims.role !== 'internal' && claims.role !== 'admin') {
       return { success: false, error: 'Unauthorized access. Internal clearance required.' }
     }
 

@@ -45,12 +45,30 @@ export async function getFounderCompanyId(authUserId: string): Promise<string | 
 }
 
 /**
+ * Resolves the founder row ID from auth user ID.
+ */
+export async function getFounderRowByUserId(authUserId: string): Promise<{ id: string } | null> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase
+    .from('founders')
+    .select('id')
+    .eq('user_id', authUserId)
+    .maybeSingle()
+
+  if (error || !data) {
+    console.error('[founder-portal.service] getFounderRowByUserId error:', error?.message)
+    return null
+  }
+  return data
+}
+
+/**
  * Returns everything the founder portal needs in one call.
  * All data is scoped to the founder's own company only.
  */
 export async function getFounderCompanyData(
   companyId: string,
-  founderId: string
+  founderId?: string
 ): Promise<FounderCompanyData | null> {
   
   const supabase = await createServerClient()
@@ -59,7 +77,7 @@ export async function getFounderCompanyData(
   const { data: company, error: companyError } = await supabase
     .from('companies')
     .select(`
-      id, name, sector, stage, country, website, founded_year,
+      id, name, sector, stage, country, website, logo_url, logo_path, founded_year,
       portfolio_health, health_reviewed_at
     `)
     .eq('id', companyId)
@@ -77,6 +95,8 @@ export async function getFounderCompanyData(
     stage: company.stage ?? null,
     country: company.country ?? null,
     website: company.website ?? null,
+    logo_url: company.logo_url ?? null,
+    logo_path: company.logo_path ?? null,
     founded_year: company.founded_year ?? null,
     portfolio_health: company.portfolio_health ?? null,
     health_reviewed_at: company.health_reviewed_at ?? null,
@@ -102,7 +122,7 @@ export async function getFounderCompanyData(
 
     if (holderRow) {
       const { data: exposureRows } = await supabase
-        .from('economic_exposure')
+        .from('exposure_positions')
         .select(`
           id, exposure_type, instrument_name, issue_date, ownership_pct, status
         `)

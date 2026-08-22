@@ -107,19 +107,26 @@ import type {
   }
   
   // ── Alert flag helpers ────────────────────────────────────────
+  // ── Alert flag helpers ────────────────────────────────────────
   const DEFAULT_FOUNDER_DILUTION_THRESHOLD = 25
   const DEFAULT_TVC_DILUTION_THRESHOLD = 20
   
-  export function isFounderDilutionAlert(vm: CapTableOwnershipViewModel): boolean {
+  export function isFounderDilutionAlert(
+    vm: CapTableOwnershipViewModel,
+    defaultThreshold?: number | null,
+  ): boolean {
     if (vm.founderDilution == null) return false
     const threshold =
-      vm.founder_dilution_alert_threshold ?? DEFAULT_FOUNDER_DILUTION_THRESHOLD
+      vm.founder_dilution_alert_threshold ?? defaultThreshold ?? DEFAULT_FOUNDER_DILUTION_THRESHOLD
     return vm.founderDilution > threshold
   }
   
-  export function isTvcDilutionAlert(vm: CapTableOwnershipViewModel): boolean {
+  export function isTvcDilutionAlert(
+    vm: CapTableOwnershipViewModel,
+    defaultThreshold?: number | null,
+  ): boolean {
     if (vm.tvcOwnershipChange == null) return false
     const threshold =
-      vm.tvc_dilution_alert_threshold ?? DEFAULT_TVC_DILUTION_THRESHOLD
+      vm.tvc_dilution_alert_threshold ?? defaultThreshold ?? DEFAULT_TVC_DILUTION_THRESHOLD
     return vm.tvcOwnershipChange > threshold
   }

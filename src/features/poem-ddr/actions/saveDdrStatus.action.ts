@@ -13,7 +13,7 @@ export async function saveDdrStatusAction(input: SaveDdrStatusInput) {
 
     // Enforce role isolation check
     const role = user.user_metadata?.role || user.app_metadata?.role
-    if (role !== 'internal') return { success: false, error: 'Access Denied: Institutional records restricted to internal analysts.' }
+    if (role !== 'internal' && role !== 'admin') return { success: false, error: 'Access Denied: Institutional records restricted to internal analysts or admins.' }
 
     const { error } = await supabase
       .from('ddr_status')
