@@ -17,21 +17,77 @@ export interface HolderOption {
 }
 
 // ── Fetch all holders for the picker ──────────────────────────
-// TVCLabs entities are pinned to the top by the caller (component),
-// this just returns everything sorted by name.
 export async function getHoldersForPicker(): Promise<HolderOption[]> {
   const supabase = await createServerClient()
 
-  const { data, error } = await supabase
-    .from('holders')
-    .select('id, name, holder_type, is_tvclabs_entity, email')
-    .order('is_tvclabs_entity', { ascending: false })  // TVCLabs entities first
-    .order('name', { ascending: true })
+  // 1. Primary: query holders table directly using basic columns (id, name)
+  try {
+    const { data: holdersData, error: holdersError } = await supabase
+      .from('holders')
+      .select('id, name')
+      .order('name', { ascending: true })
 
-  if (error) {
-    console.error('[holders] fetch error:', error.message)
-    return []
+    if (!holdersError && holdersData && holdersData.length > 0) {
+      return holdersData.map((h: any) => ({
+        id: h.id,
+        name: h.name || 'Unnamed Investor',
+        holder_type: (h.holder_type as HolderType) ?? 'Investor',
+        is_tvclabs_entity: false,
+        email: null,
+      }))
+    }
+
+    if (holdersError) {
+      console.warn('[holders.service] direct select info:', holdersError.message)
+    }
+  } catch (err: any) {
+    console.warn('[holders.service] direct catch:', err?.message)
   }
 
-  return (data ?? []) as HolderOption[]
+  // 2. Fallback: Query unique holders from exposure_positions table
+  try {
+    const { data: posData, error: posError } = await supabase
+      .from('exposure_positions')
+      .select('holder_id, holders(id, name)')
+
+    if (!posError && posData && posData.length > 0) {
+      const holderMap = new Map<string, HolderOption>()
+
+      for (const row of posData) {
+        const hRow = Array.isArray(row.holders) ? row.holders[0] : row.holders
+        if (hRow && hRow.id) {
+          if (!holderMap.has(hRow.id)) {
+            holderMap.set(hRow.id, {
+              id: hRow.id,
+              name: hRow.name || 'Unnamed Investor',
+              holder_type: 'Investor',
+              is_tvclabs_entity: false,
+              email: null,
+            })
+          }
+        } else if (row.holder_id && !holderMap.has(row.holder_id)) {
+          holderMap.set(row.holder_id, {
+            id: row.holder_id,
+            name: `Investor (${row.holder_id.slice(0, 8)})`,
+            holder_type: 'Investor',
+            is_tvclabs_entity: false,
+            email: null,
+          })
+        }
+      }
+
+      const list = Array.from(holderMap.values()).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      )
+      if (list.length > 0) return list
+    }
+
+    if (posError) {
+      console.warn('[holders.service] position fallback info:', posError.message)
+    }
+  } catch (err: any) {
+    console.warn('[holders.service] fallback catch:', err?.message)
+  }
+
+  return []
 }

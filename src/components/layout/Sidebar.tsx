@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/types/roles'
 import { SignOutButton } from '@/features/auth/components/SignOutButton'
-import { X, LayoutDashboard, Building2, Users2, LineChart, FileCheck, Briefcase, Send, LogOut, Settings } from 'lucide-react' // 💡 Added Settings & FileCheck icon
+import { X, LayoutDashboard, Building2, Users2, LineChart, FileCheck, Briefcase, Send, LogOut, Settings, MonitorPlay } from 'lucide-react' // 💡 Added Settings, FileCheck & MonitorPlay icons
 
 interface NavItem {
   label: string
@@ -14,20 +14,22 @@ interface NavItem {
 
 const NAV: Record<UserRole, NavItem[]> = {
   admin: [
-    { label: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboard },
-    { label: 'Companies',      href: '/companies',      icon: Building2 },
-    { label: 'Founders',       href: '/founders',       icon: Users2 },
-    { label: 'Exposure',       href: '/exposure',       icon: LineChart },
-    { label: 'Reconciliation', href: '/reconciliation', icon: FileCheck },
-    { label: 'Campaigns',      href: '/campaigns',      icon: Send }
+    { label: 'Dashboard',      href: '/dashboard',          icon: LayoutDashboard },
+    { label: 'Companies',      href: '/companies',          icon: Building2 },
+    { label: 'Founders',       href: '/founders',           icon: Users2 },
+    { label: 'Exposure',       href: '/exposure',           icon: LineChart },
+    { label: 'Investor View',  href: '/investor-snapshot',  icon: MonitorPlay },
+    { label: 'Reconciliation', href: '/reconciliation',     icon: FileCheck },
+    { label: 'Campaigns',      href: '/campaigns',          icon: Send }
   ],
   internal: [
-    { label: 'Dashboard',      href: '/dashboard',      icon: LayoutDashboard },
-    { label: 'Companies',      href: '/companies',      icon: Building2 },
-    { label: 'Founders',       href: '/founders',       icon: Users2 },
-    { label: 'Exposure',       href: '/exposure',       icon: LineChart },
-    { label: 'Reconciliation', href: '/reconciliation', icon: FileCheck },
-    { label: 'Campaigns',      href: '/campaigns',      icon: Send }
+    { label: 'Dashboard',      href: '/dashboard',          icon: LayoutDashboard },
+    { label: 'Companies',      href: '/companies',          icon: Building2 },
+    { label: 'Founders',       href: '/founders',           icon: Users2 },
+    { label: 'Exposure',       href: '/exposure',           icon: LineChart },
+    { label: 'Investor View',  href: '/investor-snapshot',  icon: MonitorPlay },
+    { label: 'Reconciliation', href: '/reconciliation',     icon: FileCheck },
+    { label: 'Campaigns',      href: '/campaigns',          icon: Send }
   ],
   angel: [
     { label: 'My Portfolio', href: '/portfolio', icon: Briefcase },

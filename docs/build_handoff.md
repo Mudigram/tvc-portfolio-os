@@ -120,14 +120,16 @@ Reminder of non-negotiable conventions (violations found in the audit — do not
 ---
 
 ## 9. Operator-facing documentation — ✅ COMPLETE
-**Deliverable**: Created [`docs/operator_manual.md`](file:///c:/Users/USER/Projects/tvc-portfolio-os/docs/operator_manual.md).
+**Deliverable**: Updated [`docs/operator_manual.md`](file:///c:/Users/USER/Projects/tvc-portfolio-os/docs/operator_manual.md).
 
 **Contents Covered**:
-- Operating the Master Ledger Reconciliation Console (`/reconciliation`) and source document verification hard gates.
-- Managing the Founder Monthly Reporting Pipeline (`/updates`, setting targets, Resend email reminders, review & verification decisions, and corrections flow).
-- Monitoring Governance Gap alerts & configuring `staleness_threshold_days` in `/settings`.
-- Step-by-step 3-phase Monthly Portfolio Review Protocol (Pre-cycle setup, active submission review, end-of-month reconciliation & sign-off).
-- Troubleshooting matrix & operator escalation protocols.
+- **Authentication**: Magic Link OTP + Email & Password authentication options on `/login`.
+- **Master Ledger Reconciliation**: Operating the Accordion-based Reconciliation Console (`/reconciliation`), position grouping, progress bars, and document hard gates.
+- **Founder Monthly Reporting**: Targets setting (`/updates`), Resend email reminders, verification decisions (`Verified` vs `Needs Correction`), and corrections flow.
+- **Historical Point-in-Time Exposure**: Reconstructing pre-conversion, pre-exit, and capital deployed states via `as_of` date queries on `/exposure`.
+- **Company Profile & Logo Management**: Client-side logo direct uploads, MIME validation, 2MB size cap, and URL derivation.
+- **Governance Gaps**: Dynamic staleness calculations & configuring `staleness_threshold_days` in `/settings`.
+- **Monthly Protocol & SOP**: 3-Phase monthly workflow and operator troubleshooting matrix.
 
 ---
 

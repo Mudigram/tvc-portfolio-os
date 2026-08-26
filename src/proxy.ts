@@ -111,6 +111,7 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
     '/companies',
     '/founders',
     '/exposure',
+    '/investor-snapshot',
     '/reconciliation',
     '/advisory',
     '/settings',
