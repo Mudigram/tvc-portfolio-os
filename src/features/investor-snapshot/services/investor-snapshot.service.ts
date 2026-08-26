@@ -78,6 +78,7 @@ export async function getHolderSnapshot(
       id,
       holder_id,
       exposure_type,
+      amount_invested,
       ownership_pct,
       status,
       issue_date,
@@ -111,11 +112,15 @@ export async function getHolderSnapshot(
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
 
     // Sum all events on or before the cutoff date
-    const relevantEvents = events.filter((e) => new Date(e.effective_date) <= cutoff)
-    const amountInvested = relevantEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0)
-    if (amountInvested <= 0) continue
+    const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
+    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-    // Reconstruct status — only show positions that were Active at the cutoff
+    // Fallback: If exposure_events is empty for legacy rows, use position amount_invested
+    if (amountInvested <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
+      amountInvested = Number(row.amount_invested)
+    }
+
+    // If still <= 0, allow position if ownership_pct > 0 or row status active
     const effectiveStatus = asOfDate
       ? reconstructEffectiveStatus(row.status ?? '', events, cutoff)
       : row.status ?? ''
@@ -154,9 +159,12 @@ export async function getHolderSnapshot(
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
       const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
-      const rel = events.filter((e) => new Date(e.effective_date) <= c.cutoffDate)
-      const amt = rel.reduce((sum, e) => sum + (e.amount ?? 0), 0)
-      if (amt <= 0) continue
+      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
+      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+      if (amt <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
+        amt = Number(row.amount_invested)
+      }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
       if (status === 'Active') {
@@ -207,6 +215,7 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       id,
       holder_id,
       exposure_type,
+      amount_invested,
       ownership_pct,
       status,
       issue_date,
@@ -241,9 +250,12 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
     if (!company) continue
 
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
-    const relevantEvents = events.filter((e) => new Date(e.effective_date) <= cutoff)
-    const amountInvested = relevantEvents.reduce((sum, e) => sum + (e.amount ?? 0), 0)
-    if (amountInvested <= 0) continue
+    const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
+    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+    if (amountInvested <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
+      amountInvested = Number(row.amount_invested)
+    }
 
     // Reconstruct status
     const effectiveStatus = asOfDate
@@ -297,9 +309,12 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
       const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
-      const rel = events.filter((e) => new Date(e.effective_date) <= c.cutoffDate)
-      const amt = rel.reduce((sum, e) => sum + (e.amount ?? 0), 0)
-      if (amt <= 0) continue
+      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
+      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+      if (amt <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
+        amt = Number(row.amount_invested)
+      }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
       if (status === 'Active') {

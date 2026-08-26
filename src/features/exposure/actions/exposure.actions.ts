@@ -246,8 +246,25 @@ export async function createExposureRow(
     return { success: false, error: exposureError?.message ?? 'Could not create exposure record' }
   }
 
+  // Insert initial investment event into exposure_events log ledger
+  if (amount_invested !== null && amount_invested > 0) {
+    const today = new Date().toISOString().split('T')[0]
+    const { error: eventError } = await supabase.from('exposure_events').insert({
+      position_id: newExposure.id,
+      event_type: 'investment',
+      effective_date: issue_date || today,
+      amount: amount_invested,
+      currency: 'USD',
+      created_by: claims.userId,
+    })
+    if (eventError) {
+      console.error('[exposure] initial event insert error:', eventError.message)
+    }
+  }
+
   revalidatePath(`/companies/${companyId}`)
   revalidatePath('/exposure')
+  revalidatePath('/investor-snapshot')
 
   return { success: true, exposureId: newExposure.id }
 }
