@@ -39,6 +39,14 @@ function reconstructEffectiveStatus(
   return currentStatus
 }
 
+// Helper to safely format local date as YYYY-MM-DD without UTC timezone rollback
+function formatLocalDateStr(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Generates cutoff dates for the current date/month + the 3 preceding month-ends
 function getPastMonthCutoffs(asOfDateStr?: string, monthsCount = 4) {
   const baseDate = asOfDateStr ? new Date(asOfDateStr + 'T23:59:59') : new Date()
@@ -49,14 +57,17 @@ function getPastMonthCutoffs(asOfDateStr?: string, monthsCount = 4) {
 
   for (let i = 0; i < monthsCount; i++) {
     let d: Date
+    let cutoffDateStr: string
+
     if (i === 0) {
       d = baseDate
+      cutoffDateStr = asOfDateStr || formatLocalDateStr(baseDate)
     } else {
       d = new Date(currentYear, currentMonth - i + 1, 0, 23, 59, 59)
+      cutoffDateStr = formatLocalDateStr(d)
     }
 
     const monthLabel = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-    const cutoffDateStr = d.toISOString().split('T')[0]
     results.push({ label: monthLabel, cutoffDateStr, cutoffDate: d })
   }
 
@@ -72,36 +83,46 @@ export async function getHolderSnapshot(
 ): Promise<HolderSnapshotData | null> {
   const supabase = await createServerClient()
 
+  // 1. First fetch holder profile from holders table
+  const { data: holder, error: holderErr } = await supabase
+    .from('holders')
+    .select('id, name')
+    .eq('id', holderId)
+    .maybeSingle()
+
+  if (holderErr || !holder) {
+    if (holderErr) console.error('[getHolderSnapshot] holder lookup error:', holderErr.message)
+    return null
+  }
+
+  const holderName = holder.name ?? 'Investor'
+  const holderEmail = null
+
+  // 2. Fetch positions for this holder
   const { data, error } = await supabase
     .from('exposure_positions')
     .select(`
       id,
       holder_id,
       exposure_type,
-      amount_invested,
       ownership_pct,
       status,
       issue_date,
-      companies ( id, name, sector, stage, portfolio_health ),
-      holders ( name ),
+      created_at,
+      companies ( id, name, sector, stage, portfolio_health, logo_path ),
       exposure_events ( amount, event_type, effective_date )
     `)
     .eq('holder_id', holderId)
 
-  if (error || !data || data.length === 0) {
-    if (error) console.error('[getHolderSnapshot] query error:', error.message)
+  if (error) {
+    console.error('[getHolderSnapshot] query error:', error.message)
     return null
   }
-
-  const holderRow = data[0]
-  const holderRecord = (Array.isArray(holderRow.holders) ? holderRow.holders[0] : holderRow.holders) as unknown as { name?: string } | null
-  const holderName = holderRecord?.name ?? 'Investor'
-  const holderEmail = null
 
   const cutoff = asOfDate ? new Date(asOfDate + 'T23:59:59') : new Date()
   const positions: HolderPositionCard[] = []
 
-  for (const row of data) {
+  for (const row of (data ?? [])) {
     const rawCo = Array.isArray(row.companies) ? row.companies[0] : row.companies
     const company = rawCo as unknown as {
       id: string; name: string; sector: string | null; stage: string | null
@@ -109,23 +130,31 @@ export async function getHolderSnapshot(
     } | null
     if (!company) continue
 
+    // Point-in-time check: exclude positions issued or created after asOfDate
+    if (asOfDate) {
+      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
+      if (issueOrCreated && issueOrCreated > asOfDate) {
+        continue
+      }
+    }
+
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
 
     // Sum all events on or before the cutoff date
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
-    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    const amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-    // Fallback: If exposure_events is empty for legacy rows, use position amount_invested
-    if (amountInvested <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
-      amountInvested = Number(row.amount_invested)
-    }
-
-    // If still <= 0, allow position if ownership_pct > 0 or row status active
     const effectiveStatus = asOfDate
       ? reconstructEffectiveStatus(row.status ?? '', events, cutoff)
       : row.status ?? ''
 
     if (asOfDate && effectiveStatus !== 'Active') continue
+
+    // Position must have positive amount or positive ownership on cutoff date
+    const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : null
+    if (amountInvested <= 0 && (!ownershipPct || ownershipPct <= 0)) {
+      continue
+    }
 
     positions.push({
       position_id: row.id,
@@ -137,7 +166,7 @@ export async function getHolderSnapshot(
       logo_url: deriveLogoUrl(supabase, company.logo_path ?? null),
       exposure_type: row.exposure_type ?? '',
       amount_invested: amountInvested,
-      ownership_pct: row.ownership_pct ?? null,
+      ownership_pct: ownershipPct,
       status: effectiveStatus,
     })
   }
@@ -154,20 +183,25 @@ export async function getHolderSnapshot(
     const activeCompSet = new Set<string>()
     let activePosCount = 0
 
-    for (const row of data) {
+    for (const row of (data ?? [])) {
       const rawCo = Array.isArray(row.companies) ? row.companies[0] : row.companies
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
-      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
-      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
-      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-      if (amt <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
-        amt = Number(row.amount_invested)
+      // Point-in-time check for this cutoff
+      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
+      if (issueOrCreated && issueOrCreated > c.cutoffDateStr) {
+        continue
       }
 
+      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
+      const amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
-      if (status === 'Active') {
+      const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : null
+
+      if (status === 'Active' && (amt > 0 || (ownershipPct && ownershipPct > 0))) {
         monthTotal += amt
         activeCompSet.add(company.id)
         activePosCount++
@@ -193,10 +227,12 @@ export async function getHolderSnapshot(
     }
   }).reverse()
 
+  const todayStr = formatLocalDateStr(new Date())
+
   return {
     holder_name: holderName,
     holder_email: holderEmail,
-    as_of_date: asOfDate ?? new Date().toISOString().split('T')[0],
+    as_of_date: asOfDate ?? todayStr,
     positions,
     total_invested: positions.reduce((sum, p) => sum + p.amount_invested, 0),
     monthly_history,
@@ -215,16 +251,16 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       id,
       holder_id,
       exposure_type,
-      amount_invested,
       ownership_pct,
       status,
       issue_date,
-      companies ( id, name, sector, stage, portfolio_health ),
+      created_at,
+      companies ( id, name, sector, stage, portfolio_health, logo_path ),
       exposure_events ( amount, event_type, effective_date )
     `)
     .in('holder_id', TVCLABS_HOLDER_IDS)
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = formatLocalDateStr(new Date())
 
   if (error || !data) {
     if (error) console.error('[getPortfolioShowcase] query error:', error.message)
@@ -249,13 +285,17 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
     } | null
     if (!company) continue
 
+    // Point-in-time check: exclude positions issued or created after asOfDate
+    if (asOfDate) {
+      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
+      if (issueOrCreated && issueOrCreated > asOfDate) {
+        continue
+      }
+    }
+
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
-    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
-
-    if (amountInvested <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
-      amountInvested = Number(row.amount_invested)
-    }
+    const amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
     // Reconstruct status
     const effectiveStatus = asOfDate
@@ -264,11 +304,16 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
 
     if (asOfDate && effectiveStatus !== 'Active') continue
 
+    const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : 0
+    if (amountInvested <= 0 && ownershipPct <= 0) {
+      continue
+    }
+
     const existing = companyMap.get(company.id)
     if (existing) {
       existing.tvclabs_invested += amountInvested
-      if ((row.ownership_pct ?? 0) > existing.tvclabs_ownership_pct) {
-        existing.tvclabs_ownership_pct = row.ownership_pct ?? 0
+      if (ownershipPct > existing.tvclabs_ownership_pct) {
+        existing.tvclabs_ownership_pct = ownershipPct
       }
       if (row.exposure_type && !existing.instrument_types.includes(row.exposure_type)) {
         existing.instrument_types.push(row.exposure_type)
@@ -282,7 +327,7 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
         portfolio_health: company.portfolio_health,
         logo_url: deriveLogoUrl(supabase, company.logo_path ?? null),
         tvclabs_invested: amountInvested,
-        tvclabs_ownership_pct: row.ownership_pct ?? 0,
+        tvclabs_ownership_pct: ownershipPct,
         instrument_types: row.exposure_type ? [row.exposure_type] : [],
       })
     }
@@ -308,16 +353,21 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       const rawCo = Array.isArray(row.companies) ? row.companies[0] : row.companies
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
-      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
-      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
-      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-      if (amt <= 0 && row.amount_invested && Number(row.amount_invested) > 0) {
-        amt = Number(row.amount_invested)
+      // Point-in-time check for this cutoff
+      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
+      if (issueOrCreated && issueOrCreated > c.cutoffDateStr) {
+        continue
       }
 
+      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+      const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
+      const amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
-      if (status === 'Active') {
+      const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : 0
+
+      if (status === 'Active' && (amt > 0 || ownershipPct > 0)) {
         monthTotal += amt
         activeCompSet.add(company.id)
         activePosCount++

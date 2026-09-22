@@ -9,6 +9,7 @@ import { useState, useTransition } from 'react'
 import { updateExposureRow } from '../actions/exposure.actions'
 import type { ExposureRow, ExposureType, ExposureStatus } from '../types'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
 
 const EXPOSURE_TYPES: ExposureType[] = [
   'Equity',
@@ -198,20 +199,21 @@ export function ExposureEditForm({ row, companyId, onClose, onSaved }: Props) {
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-zinc-200">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={onClose}
-            className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             disabled={isPending}
-            className="rounded-lg bg-[#1a23bd] px-5 py-2 text-sm font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors"
+            size="sm"
           >
             {isPending ? 'Saving…' : 'Save changes'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

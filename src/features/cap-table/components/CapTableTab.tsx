@@ -7,7 +7,6 @@
 // Pattern: page.tsx (server) → CapTableClientView (client)
 // ─────────────────────────────────────────────────────────────
 
-import { notFound } from 'next/navigation'
 import { getClaims } from '@/features/auth/services/auth.server'
 import { getCapTableByCompanyId } from '@/features/cap-table/services/cap-table.server'
 import CapTableClientView from '@/features/cap-table/components/CapTableClientView'
@@ -25,7 +24,7 @@ export default async function CapTableTab({ companyId, companyName }: Props) {
 
   // Founders have no access — guard here as well as in RLS
   if (!claims || claims.role === 'founder') {
-    notFound()
+    return <div className="p-8 text-center text-zinc-500 text-sm">Access to Cap Table is restricted.</div>
   }
 
   const data = await getCapTableByCompanyId(companyId)

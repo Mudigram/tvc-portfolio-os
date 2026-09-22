@@ -5,6 +5,8 @@
 
 import { EMAIL_TYPE_CONFIG, RECIPIENT_POOL_CONFIG } from '../types'
 import type { CampaignHistoryRow, RecipientPool } from '../types'
+import { Send } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 
 interface Props {
   campaigns: CampaignHistoryRow[]
@@ -40,12 +42,15 @@ export default function CampaignHistory({ campaigns }: Props) {
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-8 py-12 text-center">
-          <p className="text-sm font-medium text-zinc-500">No campaigns sent yet.</p>
-          <p className="text-xs text-zinc-400 mt-1">
-            Compose and send your first campaign above.
+        <Card className="p-12 flex flex-col items-center justify-center text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-muted/60 border border-border flex items-center justify-center mb-1">
+            <Send className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">No campaigns sent yet</h3>
+          <p className="text-xs text-muted-foreground max-w-sm">
+            Compose and send your first dispatch to angels, founders, or portfolio companies using the console above.
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="rounded-xl border border-zinc-100 bg-white shadow-sm overflow-hidden">
           <div className="overflow-x-auto">

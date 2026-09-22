@@ -12,6 +12,8 @@ import { formatPct, formatCurrency, isFounderDilutionAlert, isTvcDilutionAlert }
 import { INVESTMENT_ROUNDS, CURRENCIES } from '../types'
 import type { CapTableOwnershipViewModel } from '../types'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 // ─────────────────────────────────────────────────────────────
 
@@ -134,12 +136,12 @@ export default function CapTableClientView({
                 {alerts.map((a) => <AlertPill key={a} label={a} />)}
               </div>
             )}
-            <button
+            <Button
               onClick={() => setEditing(true)}
-              className="rounded-lg bg-[#1a23bd] px-4 py-2 text-sm font-medium text-white hover:bg-[#1520a8] transition-colors"
+              size="sm"
             >
               {data ? 'Edit' : 'Add data'}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -582,33 +584,33 @@ export default function CapTableClientView({
         {/* ── Internal notes ───────────────────────────────── */}
         <div className="rounded-xl border border-zinc-100 bg-white p-6 shadow-sm">
           <SectionHeading title="Notes" />
-          <textarea
+          <Textarea
             name="notes"
             defaultValue={data?.notes ?? ''}
             rows={4}
             placeholder="Any relevant context about the ownership structure or history…"
-            className={`${inputClass} resize-none`}
           />
         </div>
 
         {/* ── Actions ──────────────────────────────────────── */}
-        <div className="flex items-center justify-end gap-3 pb-8">
+        <div className="flex items-center justify-end gap-3 pt-2">
           {data && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => { setEditing(false); setSaveError(null) }}
-              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
             >
               Cancel
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="submit"
             disabled={isPending}
-            className="rounded-lg bg-[#1a23bd] px-5 py-2 text-sm font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors"
+            size="sm"
           >
             {isPending ? 'Saving…' : 'Save cap table'}
-          </button>
+          </Button>
         </div>
 
       </form>

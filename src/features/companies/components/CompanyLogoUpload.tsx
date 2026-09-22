@@ -3,8 +3,9 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Camera, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Camera, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { uploadCompanyLogo, getCompanyLogoUrl } from '../services/logo'
+import { Spinner } from '@/components/ui/spinner'
 
 interface CompanyLogoUploadProps {
   companyId: string
@@ -124,7 +125,7 @@ export function CompanyLogoUpload({
             title="Click to upload or replace logo"
           >
             {uploading ? (
-              <RefreshCw className="w-5 h-5 animate-spin text-white" />
+              <Spinner size="default" className="text-white" />
             ) : (
               <>
                 <Camera className="w-5 h-5 mb-0.5" />

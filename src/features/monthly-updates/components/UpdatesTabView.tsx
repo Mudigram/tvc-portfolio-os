@@ -19,9 +19,12 @@ import {
   Send,
   Target as TargetIcon,
   MessageSquare,
-  RefreshCw,
   FileEdit,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Spinner } from '@/components/ui/spinner'
 
 interface UpdatesTabViewProps {
   companyId: string
@@ -105,18 +108,19 @@ function StatusBanner({
         </div>
 
         {isInternal && !status.hasCurrentPeriodUpdate && (
-          <button
+          <Button
+            size="sm"
             onClick={handleSendReminder}
             disabled={sendingReminder}
-            className="h-8 px-3 text-xs font-semibold text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors inline-flex items-center gap-1.5 shrink-0"
+            className="shrink-0 gap-1.5"
           >
             {sendingReminder ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              <Spinner size="sm" />
             ) : (
               <Send className="w-3.5 h-3.5" />
             )}
             Send Reminder
-          </button>
+          </Button>
         )}
       </div>
 
@@ -204,50 +208,51 @@ function ReportingTargetsCard({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] font-medium text-zinc-500 uppercase">Target Revenue ($)</label>
-              <input
+              <Input
                 type="number"
                 value={revenue}
                 onChange={(e) => setRevenue(e.target.value)}
                 placeholder="e.g. 50000"
-                className="w-full h-8 px-2.5 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
+                className="h-8 text-xs"
               />
             </div>
             <div>
               <label className="text-[11px] font-medium text-zinc-500 uppercase">Target MRR ($)</label>
-              <input
+              <Input
                 type="number"
                 value={mrr}
                 onChange={(e) => setMrr(e.target.value)}
                 placeholder="e.g. 15000"
-                className="w-full h-8 px-2.5 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
+                className="h-8 text-xs"
               />
             </div>
           </div>
           <div>
             <label className="text-[11px] font-medium text-zinc-500 uppercase">Key Deliverables & Milestones</label>
-            <textarea
+            <Textarea
               rows={2}
               value={milestones}
               onChange={(e) => setMilestones(e.target.value)}
               placeholder="e.g. Launch v2 app, complete pilot with 3 enterprise clients"
-              className="w-full p-2 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
+              className="text-xs"
             />
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <button
+            <Button
               type="submit"
+              size="xs"
               disabled={saving}
-              className="h-7 px-3 text-xs font-semibold text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40"
             >
               {saving ? 'Saving...' : 'Save Targets'}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="xs"
               onClick={() => setEditing(false)}
-              className="h-7 px-3 text-xs font-medium text-zinc-500 hover:text-zinc-800"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       ) : activeTarget ? (
@@ -410,7 +415,7 @@ function UpdateCard({
             <label className="text-[11px] font-medium text-zinc-500 uppercase">
               Reviewer Notes / Feedback {reviewStatus === 'Needs Correction' && <span className="text-red-500">*</span>}
             </label>
-            <textarea
+            <Textarea
               rows={2}
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
@@ -419,26 +424,28 @@ function UpdateCard({
                   ? 'Specify required corrections for the founder...'
                   : 'Optional internal verification notes...'
               }
-              className="w-full p-2 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
+              className="text-xs"
             />
           </div>
 
           <div className="flex items-center gap-2 pt-1">
-            <button
+            <Button
               type="submit"
+              size="xs"
               disabled={isPending || (reviewStatus === 'Needs Correction' && !reviewNotes.trim())}
-              className="h-7 px-3 text-xs font-semibold text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 inline-flex items-center gap-1"
+              className="gap-1.5"
             >
-              {isPending && <RefreshCw className="w-3 h-3 animate-spin" />}
+              {isPending && <Spinner size="xs" />}
               Save Review Decision
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="xs"
               onClick={() => setShowReviewModal(false)}
-              className="h-7 px-3 text-xs font-medium text-zinc-500 hover:text-zinc-800"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -559,33 +566,34 @@ function SubmitForm({
             <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
               {label}
             </label>
-            <textarea
+            <Textarea
               rows={3}
               value={value}
               onChange={(e) => set(e.target.value)}
               placeholder={placeholder}
-              className="w-full px-3 py-2 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-lg resize-none placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
             />
           </div>
         ))}
       </div>
 
       <div className="flex items-center gap-3">
-        <button
+        <Button
           onClick={() => handleSave('Submitted')}
           disabled={saving || !achievements.trim() || !challenges.trim() || !targets.trim()}
-          className="h-8 px-4 text-xs font-semibold text-white bg-[#1a23bd] rounded-lg hover:bg-[#151c9a] disabled:opacity-40 transition-colors shadow-sm inline-flex items-center gap-1.5"
+          size="sm"
+          className="gap-1.5"
         >
-          {saving && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+          {saving && <Spinner size="sm" />}
           {isCorrection ? 'Resubmit Update' : 'Submit Update'}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => handleSave('Draft')}
           disabled={saving}
-          className="h-8 px-4 text-xs font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
         >
           Save draft
-        </button>
+        </Button>
       </div>
     </div>
   )

@@ -6,6 +6,7 @@
 import { useState, useTransition } from 'react'
 import { updateSettingAction } from '../actions/settings.actions'
 import type { SettingsMap, SettingKey } from '../types'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   settings: SettingsMap
@@ -109,13 +110,14 @@ function SettingRow({
         </div>
         <span className="text-xs text-zinc-400 w-10">{suffix}</span>
         {isDirty && (
-          <button
+          <Button
+            size="xs"
             onClick={handleSave}
             disabled={isPending}
-            className="rounded-lg bg-[#1a23bd] px-3 py-2 text-xs font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors whitespace-nowrap"
+            className="whitespace-nowrap"
           >
             {isPending ? 'Saving…' : 'Save'}
-          </button>
+          </Button>
         )}
         {saved && !isDirty && (
           <span className="text-xs text-emerald-600 font-medium">✓ Saved</span>

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { X } from "lucide-react"
+import { X, SearchX, Building2 } from "lucide-react"
 import { getCompanyLogoUrl } from '@/features/companies/services/logo'
 
 const HEALTH_COLORS: Record<string, string> = {
@@ -61,26 +61,26 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
   function resetAll()                { setSearch(''); setHealthFilter('All'); setSectorFilter('All'); setPage(1) }
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto py-4">
+    <div className="space-y-6 max-w-[1600px] mx-auto">
 
       {/* Header Section */}
-      <div className="flex items-end justify-between border-b border-zinc-100 pb-6">
+      <div className="flex items-end justify-between border-b border-border pb-5">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">Portfolio Asset Directory</h1>
-          <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Portfolio Asset Directory</h1>
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
             {companies.length} Ecosystem Economic Exposures
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setShowAddForm(true)}
-          className="inline-flex items-center justify-center h-8 px-3.5 text-xs font-semibold text-white bg-[#1a23bd] rounded hover:bg-[#151c9a] transition-colors shadow-sm"
+          size="sm"
         >
           Add Company
-        </button>
+        </Button>
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
 
           <div className="relative w-full sm:w-72">
@@ -89,7 +89,7 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
               placeholder="Filter by asset name…"
               value={search}
               onChange={(e) => applySearch(e.target.value)}
-              className="h-10 text-sm text-zinc-900 bg-transparent border-0 border-b border-zinc-200 rounded-none px-0 tracking-wide placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:border-zinc-900 transition-colors shadow-none"
+              className="h-10 text-sm text-foreground bg-transparent border-0 border-b border-border rounded-none px-0 tracking-wide placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:border-ring transition-colors shadow-none"
             />
           </div>
 
@@ -141,8 +141,27 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="py-24 text-center">
-          <p className="text-sm font-medium text-zinc-500">No assets matching your criteria</p>
+        <div className="py-20 flex flex-col items-center justify-center text-center">
+          <div className="w-12 h-12 rounded-2xl bg-muted/60 border border-border flex items-center justify-center mb-3">
+            <SearchX className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground">No assets found</h3>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+            {search || healthFilter !== 'All' || sectorFilter !== 'All'
+              ? 'No company matching your active filters. Try adjusting your search query or criteria.'
+              : 'No portfolio companies registered yet.'}
+          </p>
+          {(search || healthFilter !== 'All' || sectorFilter !== 'All') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetAll}
+              className="mt-4 gap-1.5"
+            >
+              <X className="w-3.5 h-3.5" />
+              Reset Filters
+            </Button>
+          )}
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -259,35 +278,35 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
 
           {/* Page controls */}
           <div className="flex items-center gap-1">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               ← Prev
-            </button>
+            </Button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
+              <Button
                 key={p}
+                variant={p === safePage ? "default" : "outline"}
+                size="sm"
+                className="w-8 h-8 p-0"
                 onClick={() => setPage(p)}
-                className={`w-8 h-8 text-xs font-semibold rounded-md transition-colors ${
-                  p === safePage
-                    ? 'bg-[#1a23bd] text-white'
-                    : 'text-zinc-500 hover:bg-zinc-50 border border-zinc-200'
-                }`}
               >
                 {p}
-              </button>
+              </Button>
             ))}
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-md hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Next →
-            </button>
+            </Button>
           </div>
         </div>
       )}

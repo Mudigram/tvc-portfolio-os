@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { submitUpdateAction } from '../actions/submitUpdate.action';
 import type { CreateUpdateInput, UpdateStatus } from '../types';
+import { FormSelect } from '@/components/ui/form-select';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 interface SubmitUpdateFormProps {
     companyId: string;
@@ -134,42 +137,40 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                     <label htmlFor="month" className="block text-sm font-medium text-zinc-700 mb-1">
                         Month <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <FormSelect
                         id="month"
                         name="month"
                         value={formData.month}
                         onChange={handleChange}
                         required
                         disabled={isEditing}
-                        className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent disabled:bg-zinc-50 disabled:text-zinc-400"
                     >
                         {monthOptions.map(option => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
                             </option>
                         ))}
-                    </select>
+                    </FormSelect>
                 </div>
                 
                 <div>
                     <label htmlFor="year" className="block text-sm font-medium text-zinc-700 mb-1">
                         Year <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <FormSelect
                         id="year"
                         name="year"
                         value={formData.year}
                         onChange={handleChange}
                         required
                         disabled={isEditing}
-                        className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent disabled:bg-zinc-50 disabled:text-zinc-400"
                     >
                         {yearOptions.map(option => (
                             <option key={option.value} value={option.value}>
                                 {option.label}
                             </option>
                         ))}
-                    </select>
+                    </FormSelect>
                 </div>
             </div>
             
@@ -177,7 +178,7 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                 <label htmlFor="achievements" className="block text-sm font-medium text-zinc-700 mb-1">
                     Achievements <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                     id="achievements"
                     name="achievements"
                     rows={3}
@@ -185,7 +186,6 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                     value={formData.achievements}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent"
                 />
             </div>
             
@@ -193,7 +193,7 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                 <label htmlFor="challenges" className="block text-sm font-medium text-zinc-700 mb-1">
                     Challenges <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                     id="challenges"
                     name="challenges"
                     rows={3}
@@ -201,7 +201,6 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                     value={formData.challenges}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent"
                 />
             </div>
             
@@ -209,7 +208,7 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                 <label htmlFor="targets" className="block text-sm font-medium text-zinc-700 mb-1">
                     Targets <span className="text-red-500">*</span>
                 </label>
-                <textarea
+                <Textarea
                     id="targets"
                     name="targets"
                     rows={3}
@@ -217,29 +216,29 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                     value={formData.targets}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-800 focus:border-transparent"
                 />
             </div>
             
             <div className="flex justify-end gap-3">
                 {isEditing && (
-                    <button
+                    <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => {
                             if (confirm('Delete this draft?')) {
                                 // TODO: Implement delete draft
-                                // This will be in the next iteration
                             }
                         }}
-                        className="rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className="text-red-600 border-red-200 hover:bg-red-50"
                     >
                         Delete Draft
-                    </button>
+                    </Button>
                 )}
-                <button
+                <Button
                     type="submit"
+                    size="sm"
                     disabled={isSubmitting}
-                    className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                     {isSubmitting 
                         ? 'Saving...' 
@@ -247,7 +246,7 @@ export function SubmitUpdateForm({ companyId, existingUpdate, onSuccess }: Submi
                             ? 'Save Changes' 
                             : 'Save as Draft'
                     }
-                </button>
+                </Button>
             </div>
         </form>
     );

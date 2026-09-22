@@ -7,6 +7,9 @@ import {
   type CreateFounderInput,
 } from '@/features/founders/actions/createFounder.action'
 import { useToast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { FormSelect } from '@/components/ui/form-select'
 
 const INDUSTRIES = [
   'Fintech', 'Healthtech', 'Developer Tools', 'Logistics',
@@ -87,12 +90,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Full name <span className="text-red-400">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.full_name}
                 onChange={(e) => set('full_name', e.target.value)}
                 placeholder="e.g. Ade Okonkwo"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -101,12 +103,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Email <span className="text-red-400">*</span>
               </label>
-              <input
+              <Input
                 type="email"
                 value={form.email}
                 onChange={(e) => set('email', e.target.value)}
                 placeholder="e.g. ade@startup.com"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -115,12 +116,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Startup name
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.startup_name ?? ''}
                 onChange={(e) => set('startup_name', e.target.value || null)}
                 placeholder="e.g. Payflux"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -129,12 +129,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Phone
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.phone ?? ''}
                 onChange={(e) => set('phone', e.target.value || null)}
                 placeholder="+234 801 234 5678"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -143,12 +142,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 LinkedIn
               </label>
-              <input
+              <Input
                 type="url"
                 value={form.linkedin_url ?? ''}
                 onChange={(e) => set('linkedin_url', e.target.value || null)}
                 placeholder="https://linkedin.com/in/..."
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -157,14 +155,13 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Industry
               </label>
-              <select
+              <FormSelect
                 value={form.industry ?? ''}
                 onChange={(e) => set('industry', e.target.value || null)}
-                className="w-full h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="">Select industry</option>
                 {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
-              </select>
+              </FormSelect>
             </div>
 
             {/* Stage */}
@@ -172,14 +169,13 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Stage
               </label>
-              <select
+              <FormSelect
                 value={form.stage ?? ''}
                 onChange={(e) => set('stage', e.target.value || null)}
-                className="w-full h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
               >
                 <option value="">Select stage</option>
                 {STAGES.map((s) => <option key={s}>{s}</option>)}
-              </select>
+              </FormSelect>
             </div>
 
             {/* City */}
@@ -187,12 +183,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 City
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.city ?? ''}
                 onChange={(e) => set('city', e.target.value || null)}
                 placeholder="e.g. Lagos"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -201,12 +196,11 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Country
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.country ?? ''}
                 onChange={(e) => set('country', e.target.value || null)}
                 placeholder="e.g. Nigeria"
-                className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
               />
             </div>
 
@@ -215,19 +209,21 @@ export function AddFounderForm({ onClose }: AddFounderFormProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={saving || !form.full_name.trim() || !form.email.trim()}
-            className="h-8 px-4 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors"
+            size="sm"
           >
             {saving ? 'Creating…' : 'Add founder'}
-          </button>
+          </Button>
         </div>
 
       </div>

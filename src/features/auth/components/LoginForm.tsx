@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { signInWithMagicLink, signInWithPasswordAction } from '@/features/auth/services/auth.actions'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 
 type AuthMode = 'magic_link' | 'password'
 type FormState = 'idle' | 'loading' | 'sent' | 'error'
@@ -134,7 +137,7 @@ export function LoginForm() {
             >
               Email
             </label>
-            <input
+            <Input
               id="email-magic"
               type="email"
               autoComplete="email"
@@ -144,12 +147,6 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               disabled={state === 'loading'}
-              className="
-                w-full h-10 px-3 text-sm text-zinc-900 bg-white border border-zinc-200
-                rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2
-                focus:ring-zinc-900 focus:border-transparent disabled:opacity-50
-                disabled:cursor-not-allowed transition-shadow
-              "
             />
           </div>
 
@@ -159,17 +156,18 @@ export function LoginForm() {
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={state === 'loading' || !email.trim()}
-            className="
-              w-full h-10 px-4 text-sm font-medium text-white bg-zinc-900 rounded-md
-              hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900
-              focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors
-            "
+            className="w-full h-10 gap-2"
           >
-            {state === 'loading' ? 'Sending…' : 'Send sign-in link'}
-          </button>
+            {state === 'loading' ? (
+              <>
+                <Spinner size="sm" />
+                Sending…
+              </>
+            ) : 'Send sign-in link'}
+          </Button>
         </form>
       ) : (
         <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
@@ -180,7 +178,7 @@ export function LoginForm() {
             >
               Email
             </label>
-            <input
+            <Input
               id="email-pwd"
               type="email"
               autoComplete="email"
@@ -190,12 +188,6 @@ export function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               disabled={state === 'loading'}
-              className="
-                w-full h-10 px-3 text-sm text-zinc-900 bg-white border border-zinc-200
-                rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2
-                focus:ring-zinc-900 focus:border-transparent disabled:opacity-50
-                disabled:cursor-not-allowed transition-shadow
-              "
             />
           </div>
 
@@ -206,7 +198,7 @@ export function LoginForm() {
             >
               Password
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               autoComplete="current-password"
@@ -215,12 +207,6 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               disabled={state === 'loading'}
-              className="
-                w-full h-10 px-3 text-sm text-zinc-900 bg-white border border-zinc-200
-                rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2
-                focus:ring-zinc-900 focus:border-transparent disabled:opacity-50
-                disabled:cursor-not-allowed transition-shadow
-              "
             />
           </div>
 
@@ -230,17 +216,18 @@ export function LoginForm() {
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={state === 'loading' || !email.trim() || !password}
-            className="
-              w-full h-10 px-4 text-sm font-medium text-white bg-zinc-900 rounded-md
-              hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900
-              focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors
-            "
+            className="w-full h-10 gap-2"
           >
-            {state === 'loading' ? 'Signing in…' : 'Sign in with Password'}
-          </button>
+            {state === 'loading' ? (
+              <>
+                <Spinner size="sm" />
+                Signing in…
+              </>
+            ) : 'Sign in with Password'}
+          </Button>
         </form>
       )}
 

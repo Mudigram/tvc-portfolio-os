@@ -7,6 +7,8 @@ import { createFundingRoundAction } from '../actions/createFundingRound.action'
 import type { FundingRound, FundingStatus, CompanyFundingSummary, RoundName } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 
 interface FundingTabViewProps {
   companyId: string
@@ -132,12 +134,12 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Funding Round History</h2>
             {isInternal && (
-              <button 
+              <Button 
+                size="xs"
                 onClick={() => setShowRoundModal(true)}
-                className="h-7 px-3 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors"
               >
                 + Log Funding Round
-              </button>
+              </Button>
             )}
           </div>
 
@@ -220,14 +222,14 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
                 <input type="checkbox" checked={followon} onChange={(e) => setFollowon(e.target.checked)} className="accent-zinc-900" />
               </div>
 
-              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+              <Button type="submit" disabled={saving} size="sm" className="w-full mt-2 gap-1.5">
                 {saving ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="sm" />
                     Saving changes…
                   </>
                 ) : 'Save Operational Status'}
-              </button>
+              </Button>
             </form>
           )}
         </div>
@@ -261,17 +263,17 @@ export default function FundingTabView({ companyId, initialStatus, rounds, summa
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <button type="button" onClick={() => setShowRoundModal(false)} className="px-4 py-2 text-sm font-medium text-zinc-700 bg-white border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors">
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowRoundModal(false)}>
                 Cancel
-              </button>
-              <button type="submit" disabled={saving} className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors">
+              </Button>
+              <Button type="submit" disabled={saving} size="sm" className="gap-1.5">
                 {saving ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="sm" />
                     Logging...
                   </>
                 ) : 'Confirm Round'}
-              </button>
+              </Button>
             </div>
           </form>
         </div>

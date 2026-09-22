@@ -18,6 +18,10 @@ import type {
   RecipientPool,
   ResolvedRecipient,
 } from '../types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { FormSelect } from '@/components/ui/form-select'
 
 const inputClass =
   'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 ' +
@@ -155,50 +159,46 @@ export default function CampaignComposeForm() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Internal title</label>
-              <input
+              <Input
                 type="text"
                 name="title"
                 placeholder="e.g. Q2 2026 Angel Update"
-                className={inputClass}
                 required
               />
             </div>
 
             <div>
               <label className={labelClass}>Email type</label>
-              <select
+              <FormSelect
                 name="email_type"
                 value={emailType}
                 onChange={(e) => handleEmailTypeChange(e.target.value as CampaignEmailType)}
-                className={selectClass}
               >
                 {EMAIL_TYPES.map(([key, config]) => (
                   <option key={key} value={key}>{config.label}</option>
                 ))}
-              </select>
+              </FormSelect>
             </div>
           </div>
 
           <div>
             <label className={labelClass}>Subject line</label>
-            <input
+            <Input
               type="text"
               name="subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Email subject"
-              className={inputClass}
               required
             />
           </div>
 
           <div>
             <label className={labelClass}>Body</label>
-            <textarea
+            <Textarea
               name="body"
               rows={10}
               placeholder="Write your message here…"
-              className={`${inputClass} resize-none leading-relaxed`}
               required
             />
             <p className="text-xs text-zinc-400 mt-1">
@@ -242,11 +242,10 @@ export default function CampaignComposeForm() {
             <label className={labelClass}>
               Individual emails (optional)
             </label>
-            <textarea
+            <Textarea
               name="individual_emails"
               rows={3}
               placeholder="one@example.com, two@example.com"
-              className={`${inputClass} resize-none`}
               onChange={() => setPreviewRecipients(null)}
             />
             <p className="text-xs text-zinc-400 mt-1">
@@ -256,22 +255,23 @@ export default function CampaignComposeForm() {
 
           {/* Preview button */}
           <div className="flex items-center gap-3 pt-2 border-t border-zinc-50">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handlePreview}
               disabled={previewing}
-              className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
             >
               {previewing ? 'Resolving…' : 'Preview recipients'}
-            </button>
+            </Button>
             {previewError && (
               <p className="text-xs text-red-600">{previewError}</p>
             )}
           </div>
         </div>
 
-        {/* ── Preview panel ────────────────────────────────── */}
-        {previewRecipients !== null && (
+        {/* ── Step 2: Recipient preview ────────────────────────── */}
+        {previewRecipients && (
           <div className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-50">
               <div>
@@ -283,14 +283,14 @@ export default function CampaignComposeForm() {
                 </p>
               </div>
               {previewRecipients.length > 0 && (
-                <button
+                <Button
                   type="button"
+                  size="sm"
                   onClick={handleSend}
                   disabled={sending}
-                  className="rounded-lg bg-[#1a23bd] px-5 py-2 text-sm font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors"
                 >
                   {sending ? 'Sending…' : `Send to ${previewRecipients.length} recipient${previewRecipients.length !== 1 ? 's' : ''}`}
-                </button>
+                </Button>
               )}
             </div>
 

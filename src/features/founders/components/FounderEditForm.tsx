@@ -4,6 +4,10 @@ import { useState } from 'react'
 import { updateFounderAction } from '@/features/founders/actions/updateFounder.action'
 import type { Founder, UpdateFounderInput } from '@/features/founders/types'
 import { useToast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { FormSelect } from '@/components/ui/form-select'
 
 const INDUSTRIES = [
   'Fintech', 'Healthtech', 'Developer Tools', 'Logistics',
@@ -148,9 +152,10 @@ export function FounderEditForm({ founder }: FounderEditFormProps) {
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Full name <span className="text-red-400">*</span>
           </label>
-          <input type="text" value={form.full_name}
+          <Input
+            type="text"
+            value={form.full_name}
             onChange={(e) => set('full_name', e.target.value)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
@@ -158,83 +163,89 @@ export function FounderEditForm({ founder }: FounderEditFormProps) {
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Email <span className="text-red-400">*</span>
           </label>
-          <input type="email" value={form.email}
+          <Input
+            type="email"
+            value={form.email}
             onChange={(e) => set('email', e.target.value)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Phone</label>
-          <input type="text" value={form.phone ?? ''}
+          <Input
+            type="text"
+            value={form.phone ?? ''}
             onChange={(e) => set('phone', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Startup name</label>
-          <input type="text" value={form.startup_name ?? ''}
+          <Input
+            type="text"
+            value={form.startup_name ?? ''}
             onChange={(e) => set('startup_name', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Industry</label>
-          <select value={form.industry ?? ''}
+          <FormSelect
+            value={form.industry ?? ''}
             onChange={(e) => set('industry', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="">Select industry</option>
             {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
-          </select>
+          </FormSelect>
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Stage</label>
-          <select value={form.stage ?? ''}
+          <FormSelect
+            value={form.stage ?? ''}
             onChange={(e) => set('stage', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="">Select stage</option>
             {STAGES.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          </FormSelect>
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">City</label>
-          <input type="text" value={form.city ?? ''}
+          <Input
+            type="text"
+            value={form.city ?? ''}
             onChange={(e) => set('city', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Country</label>
-          <input type="text" value={form.country ?? ''}
+          <Input
+            type="text"
+            value={form.country ?? ''}
             onChange={(e) => set('country', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">DDR status</label>
-          <select value={form.ddr_status ?? ''}
+          <FormSelect
+            value={form.ddr_status ?? ''}
             onChange={(e) => set('ddr_status', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="">Select status</option>
             {DDR_STATUSES.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          </FormSelect>
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">LinkedIn URL</label>
-          <input type="url" value={form.linkedin_url ?? ''}
+          <Input
+            type="url"
+            value={form.linkedin_url ?? ''}
             onChange={(e) => set('linkedin_url', e.target.value || null)}
             placeholder="https://linkedin.com/in/..."
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
           />
         </div>
       </div>
@@ -242,24 +253,21 @@ export function FounderEditForm({ founder }: FounderEditFormProps) {
       {/* Notes — full width */}
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Notes</label>
-        <textarea rows={4} value={form.notes ?? ''}
+        <Textarea
+          rows={4}
+          value={form.notes ?? ''}
           onChange={(e) => set('notes', e.target.value || null)}
           placeholder="Internal notes about this founder..."
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-md bg-white resize-none placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
         />
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={handleSave} disabled={saving || !form.full_name.trim() || !form.email.trim()}
-          className="h-8 px-4 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors"
-        >
+        <Button onClick={handleSave} disabled={saving || !form.full_name.trim() || !form.email.trim()} size="sm">
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
-        <button onClick={handleCancel} disabled={saving}
-          className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
-        >
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleCancel} disabled={saving}>
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   )

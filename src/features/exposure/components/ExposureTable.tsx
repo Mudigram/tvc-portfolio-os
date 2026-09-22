@@ -15,6 +15,7 @@ import { InvestmentBarChart } from '@/features/exposure/components/InvestmentBar
 import { ExposureEditForm } from '@/features/exposure/components/ExposureEditForm'
 import { ExposureCreateForm } from '@/features/exposure/components/ExposureCreateForm'
 import type { HolderOption } from '@/features/exposure/services/holders.service'
+import { Button } from '@/components/ui/button'
 
 interface ExposureTableProps {
   rows: ExposureRow[]
@@ -146,12 +147,12 @@ export default function ExposureTable({
         </div>
  
         {canEdit && (
-          <button
+          <Button
+            size="sm"
             onClick={() => setIsCreating((prev) => !prev)}
-            className="rounded-lg bg-[#1a23bd] px-4 py-2 text-sm font-medium text-white hover:bg-[#1520a8] transition-colors"
           >
             {isCreating ? 'Close' : '+ Add exposure'}
-          </button>
+          </Button>
         )}
       </div>
  

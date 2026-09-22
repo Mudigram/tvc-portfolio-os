@@ -15,6 +15,8 @@ import HealthEditForm from '@/features/companies/components/HealthEditForm'
 import type { CompanyProfile } from '@/features/companies/types'
 import { CompanyIdentityEditForm } from '@/features/companies/components/CompanyIdentityEditForm'
 import { getCompanyLogoUrl } from '@/features/companies/services/logo'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface CompanyOverviewTabProps {
   company: CompanyProfile
@@ -52,15 +54,15 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="bg-white border border-zinc-100 rounded-xl p-6 space-y-5 shadow-sm">
+    <Card className="p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
+        <h2 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
           {title}
         </h2>
         {action}
       </div>
       {children}
-    </div>
+    </Card>
   )
 }
 
@@ -143,19 +145,19 @@ export default function CompanyOverviewTab({ company, stalenessDays = 90 }: Comp
         <SectionCard
           title="Company Identity"
           action={
-            <button
+            <Button
+              size="xs"
               onClick={() => {
                 // Find and click the hidden edit trigger inside CompanyIdentityEditForm
                 document.getElementById('company-identity-edit-trigger')?.click()
               }}
-              className="inline-flex items-center gap-1.5 h-7 px-3 text-xs font-semibold text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors"
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
               Edit Profile
-            </button>
+            </Button>
           }
         >
           <CompanyIdentityEditForm company={company} />

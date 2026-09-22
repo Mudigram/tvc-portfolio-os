@@ -1,4 +1,6 @@
 import type { PortfolioShowcaseData, ShowcaseCompanyCard, MonthlyValuePoint } from '../types'
+import { CalendarX2, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -190,14 +192,15 @@ function MonthlyTrajectorySection({ points }: { points: MonthlyValuePoint[] }) {
 interface Props {
   data: PortfolioShowcaseData
   recipientName?: string
+  onResetDate?: () => void
 }
 
-export default function PortfolioShowcaseCard({ data, recipientName }: Props) {
+export default function PortfolioShowcaseCard({ data, recipientName, onResetDate }: Props) {
   const generatedOn = formatDate(new Date().toISOString().split('T')[0])
   const asOfFormatted = formatDate(data.as_of_date)
 
   return (
-    <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden print:border-0 print:shadow-none print:rounded-none">
+    <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden print:border-0 print:shadow-none print:rounded-none">
 
       {/* ── Document Header ─────────────────────────────────────────── */}
       <div className="border-b border-zinc-100 bg-gradient-to-r from-blue-50/50 via-indigo-50/20 to-white px-8 py-8">
@@ -262,10 +265,27 @@ export default function PortfolioShowcaseCard({ data, recipientName }: Props) {
         <MonthlyTrajectorySection points={data.monthly_history} />
 
         {data.companies.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-zinc-500 text-sm">
-              No active portfolio positions as of {asOfFormatted}.
+          <div className="flex flex-col items-center justify-center py-14 px-4 text-center bg-zinc-50/50 border border-dashed border-zinc-200 rounded-xl my-2">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100/80 flex items-center justify-center mb-3">
+              <CalendarX2 className="w-5 h-5 text-[#1a23bd]" />
+            </div>
+            <h3 className="text-sm font-semibold text-zinc-900 mb-1">
+              No portfolio deployments as of {asOfFormatted}
+            </h3>
+            <p className="text-xs text-zinc-500 max-w-md leading-relaxed mb-4">
+              No active portfolio investments were recorded on or prior to this cutoff date.
             </p>
+            {onResetDate && (
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={onResetDate}
+                className="gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                View Current Portfolio
+              </Button>
+            )}
           </div>
         ) : (
           <>

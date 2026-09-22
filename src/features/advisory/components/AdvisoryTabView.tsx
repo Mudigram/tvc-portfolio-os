@@ -6,6 +6,10 @@ import { logAdvisoryActivityAction } from '../actions/LogAdvisoryActivity.action
 import type { AdvisoryActivity, AdvisorRosterItem, AdvisorInteractionType } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Spinner } from '@/components/ui/spinner'
 
 interface AdvisoryTabViewProps {
   companyId: string
@@ -176,22 +180,23 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
     </div>
   ) : (
     <div className="flex items-center gap-2">
-      <input
+      <Input
         type="text"
         value={advisorName}
         onChange={(e) => setAdvisorName(e.target.value)}
         placeholder="Enter advisor name"
-        className="flex-1 border p-2 rounded text-sm focus:ring-2 focus:ring-zinc-900"
         required
         autoFocus
       />
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="xs"
         onClick={() => { setUseCustomAdvisor(false); setAdvisorName('') }}
-        className="text-xs text-zinc-400 hover:text-zinc-700 whitespace-nowrap"
+        className="whitespace-nowrap"
       >
         Back to list
-      </button>
+      </Button>
     </div>
   )}
 </div>
@@ -199,7 +204,7 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Session Date</label>
-                  <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" required />
+                  <Input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} required />
                 </div>
                 <div>
   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">
@@ -218,29 +223,29 @@ export default function AdvisoryTabView({ companyId, activities, roster }: Advis
 
               <div>
                 <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Interaction Summary / Notes</label>
-                <textarea rows={4} placeholder="What issues were evaluated? Note key outputs/intros..." value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm resize-none" required />
+                <Textarea rows={4} placeholder="What issues were evaluated? Note key outputs/intros..." value={topic} onChange={(e) => setTopic(e.target.value)} required />
               </div>
 
               <div className="border-t border-zinc-50 pt-3 space-y-3">
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Follow-on Action Item (Optional)</label>
-                  <input type="text" placeholder="e.g. Schedule review workshop" value={nextAction} onChange={(e) => setNextAction(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" />
+                  <Input type="text" placeholder="e.g. Schedule review workshop" value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Action Deadline</label>
-                  <input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm" />
+                  <Input type="date" value={nextDate} onChange={(e) => setNextDate(e.target.value)} />
                 </div>
               </div>
               
 
-              <button type="submit" disabled={saving || !advisorName} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors">
-        {saving ? (
-          <>
-            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Saving...
-          </>
-        ) : 'Log Interaction'}
-      </button>
+              <Button type="submit" disabled={saving || !advisorName} size="sm" className="w-full gap-1.5">
+                {saving ? (
+                  <>
+                    <Spinner size="sm" />
+                    Saving...
+                  </>
+                ) : 'Log Interaction'}
+              </Button>
             </form>
           )}
         </div>

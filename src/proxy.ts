@@ -86,9 +86,9 @@ export const config = {
 // ---------------------------------------------------------------------------
 
 function isPublicRoute(pathname: string): boolean {
-  const publicRoutes = ['/login', '/auth/callback']
+  const publicRoutes = ['/login', '/auth/callback', '/']
   return publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(route + '/')
+    (route) => pathname === route || (route !== '/' && pathname.startsWith(route + '/'))
   )
 }
 
@@ -96,17 +96,18 @@ function isPublicRoute(pathname: string): boolean {
  * Returns true if a user with `role` is allowed to access `pathname`.
  *
  * Route group mapping:
- *   /dashboard, /companies, /founders, /exposure, /advisory, /settings
+ *   /dashboard, /companies, /founders, /exposure, /advisory, /settings, /campaigns, /investor-snapshot, /reconciliation
  *     → internal only
  *
  *   /portfolio
  *     → angel only
  *
- *   /my-company, /submit-update, /documents
+ *   /founder-dashboard, /my-company, /updates
  *     → founder only
  */
 function isRoutePermitted(pathname: string, role: UserRole): boolean {
   const internalRoutes = [
+    '/',
     '/dashboard',
     '/companies',
     '/founders',
@@ -123,11 +124,17 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
 
   const angelRoutes = ['/portfolio']
 
-  const founderRoutes = ['/my-company', '/submit-update', '/documents']
+  const founderRoutes = [
+    '/founder-dashboard',
+    '/my-company',
+    '/updates',
+    '/submit-update',
+    '/documents',
+  ]
 
   if (role === 'internal' || role === 'admin') {
     return (
-      internalRoutes.some((r) => pathname === r || pathname.startsWith(r + '/')) ||
+      internalRoutes.some((r) => pathname === r || (r !== '/' && pathname.startsWith(r + '/'))) ||
       angelRoutes.some((r) => pathname === r || pathname.startsWith(r + '/')) ||
       founderRoutes.some((r) => pathname === r || pathname.startsWith(r + '/'))
     )
@@ -153,7 +160,7 @@ function getRoleDashboard(role: UserRole): string {
     admin: '/dashboard',
     internal: '/dashboard',
     angel: '/portfolio',
-    founder: '/my-company',
+    founder: '/founder-dashboard',
   }
   return dashboards[role]
 }

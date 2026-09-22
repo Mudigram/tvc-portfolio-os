@@ -31,15 +31,15 @@ export default async function InternalDashboard() {
   const exitReady          = companies.filter((c) => c.exit_readiness_signal).length
 
   return (
-    <div className="space-y-12 max-w-[1600px] mx-auto py-2 mb-10">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
 
       {/* ── Executive overview header ────────────────────── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-b border-zinc-100 pb-8">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-b border-border pb-6">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">
             Ecosystem Control Scorecard
           </h1>
-          <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
             Active Asset Positions & Governance Health
           </p>
         </div>
@@ -48,43 +48,43 @@ export default async function InternalDashboard() {
         <div className="flex flex-wrap items-center gap-x-12 gap-y-6">
 
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               Cycle Compliance
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold text-zinc-900 tracking-tight">
+              <span className="text-2xl font-semibold text-foreground tracking-tight">
                 {compliantThisMonth}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">/ {totalTracked} active</span>
+              <span className="text-xs text-muted-foreground font-medium">/ {totalTracked} active</span>
             </div>
           </div>
 
-          <div className="space-y-1 border-l border-zinc-100 pl-8 xl:pl-12">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+          <div className="space-y-1 border-l border-border pl-8 xl:pl-12">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               Active Fundraises
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold text-[#1a23bd] tracking-tight">
+              <span className="text-2xl font-semibold text-primary tracking-tight">
                 {activelyRaising}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">assets scaling</span>
+              <span className="text-xs text-muted-foreground font-medium">assets scaling</span>
             </div>
           </div>
 
-          <div className="space-y-1 border-l border-zinc-100 pl-8 xl:pl-12">
-            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+          <div className="space-y-1 border-l border-border pl-8 xl:pl-12">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
               Exit Horizons
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-semibold text-emerald-600 tracking-tight">
                 {exitReady}
               </span>
-              <span className="text-xs text-zinc-400 font-medium">signals clear</span>
+              <span className="text-xs text-muted-foreground font-medium">signals clear</span>
             </div>
           </div>
 
           {/* Donut + legend */}
-          <div className="flex items-center gap-4 border-l border-zinc-100 pl-8 xl:pl-12">
+          <div className="flex items-center gap-4 border-l border-border pl-8 xl:pl-12">
             <HealthDonutChart red={red} amber={amber} green={green} unset={unset} />
             <div className="flex flex-col gap-1 justify-center">
               {red > 0 && (

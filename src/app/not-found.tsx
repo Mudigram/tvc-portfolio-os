@@ -9,6 +9,7 @@ import {
   Search,
   ShieldAlert,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export const metadata = {
   title: '404 - Record Not Found | TVCLabs Portfolio OS',
@@ -51,20 +52,18 @@ export default function NotFound() {
 
         {/* Primary Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto h-10 px-5 text-xs font-semibold text-white bg-[#1a23bd] hover:bg-[#151c9a] rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#1a23bd]/25 active:scale-95"
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Return to Dashboard
-          </Link>
-          <Link
-            href="/companies"
-            className="w-full sm:w-auto h-10 px-5 text-xs font-medium text-zinc-300 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:text-white rounded-lg flex items-center justify-center gap-2 transition-colors active:scale-95"
-          >
-            <Building2 className="w-4 h-4 text-zinc-400" />
-            Browse Companies
-          </Link>
+          <Button asChild size="default" className="w-full sm:w-auto">
+            <Link href="/dashboard">
+              <LayoutDashboard className="w-4 h-4 mr-1.5" />
+              Return to Dashboard
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="default" className="w-full sm:w-auto bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+            <Link href="/companies">
+              <Building2 className="w-4 h-4 mr-1.5 text-zinc-400" />
+              Browse Companies
+            </Link>
+          </Button>
         </div>
 
         {/* Quick Navigation Traversal Grid */}

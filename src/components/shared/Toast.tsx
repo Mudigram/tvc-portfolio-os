@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 
 export type ToastType = 'success' | 'error' | 'info'
 
@@ -63,59 +64,46 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
     return () => clearTimeout(timer)
   }, [toast.id, onDismiss])
 
-  const typeStyles = {
+  const typeConfig = {
     success: {
-      border: 'border-emerald-100',
-      iconBg: 'bg-emerald-50 text-emerald-600',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      )
+      border: 'border-emerald-500/20',
+      iconBg: 'bg-emerald-500/10 text-emerald-600',
+      icon: <CheckCircle2 className="w-4 h-4" />,
     },
     error: {
-      border: 'border-red-100',
-      iconBg: 'bg-red-50 text-red-600',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      )
+      border: 'border-destructive/20',
+      iconBg: 'bg-destructive/10 text-destructive',
+      icon: <AlertCircle className="w-4 h-4" />,
     },
     info: {
-      border: 'border-blue-100',
-      iconBg: 'bg-blue-50 text-[#1a23bd]',
-      icon: (
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    }
+      border: 'border-primary/20',
+      iconBg: 'bg-primary/10 text-primary',
+      icon: <Info className="w-4 h-4" />,
+    },
   }
 
-  const styles = typeStyles[toast.type]
+  const config = typeConfig[toast.type]
 
   return (
     <div className={`
-      flex items-start gap-3 p-4 bg-white border ${styles.border} shadow-lg rounded-xl transition-all duration-300 transform scale-100 opacity-100 translate-y-0
+      flex items-start gap-3 p-4 bg-card border ${config.border} shadow-lg rounded-xl transition-all duration-300 transform scale-100 opacity-100 translate-y-0
       animate-in fade-in slide-in-from-bottom-4 duration-300
     `}>
-      <div className={`p-1 rounded-lg shrink-0 ${styles.iconBg}`}>
-        {styles.icon}
+      <div className={`p-1 rounded-lg shrink-0 ${config.iconBg}`}>
+        {config.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="text-xs font-semibold text-zinc-900">{toast.title}</h4>
+        <h4 className="text-xs font-semibold text-card-foreground">{toast.title}</h4>
         {toast.description && (
-          <p className="text-[11px] text-zinc-400 mt-0.5 leading-normal">{toast.description}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 leading-normal">{toast.description}</p>
         )}
       </div>
       <button 
         onClick={() => onDismiss(toast.id)}
-        className="shrink-0 text-zinc-400 hover:text-zinc-600 p-0.5 rounded transition-colors"
+        className="shrink-0 text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+        aria-label="Dismiss notification"
       >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
   )

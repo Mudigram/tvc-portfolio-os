@@ -6,6 +6,9 @@ import { saveExitReadinessAction } from '../actions/saveExitReadinessInput.actio
 import type { ExitReadinessData, ReadinessSignal } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Spinner } from '@/components/ui/spinner'
 
 interface ExitReadinessTabViewProps {
   companyId: string;
@@ -92,52 +95,52 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
           
           {/* STATS ANALYTICS KPI HEADER */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-5 bg-white border border-zinc-100 rounded-lg flex justify-between items-center shadow-sm">
+            <Card className="p-5 flex-row justify-between items-center">
               <div>
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Liquidity Path Stage</h3>
-                <p className="text-xl font-bold text-zinc-900 mt-1">{readiness}</p>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Liquidity Path Stage</h3>
+                <p className="text-xl font-bold text-foreground mt-1">{readiness}</p>
               </div>
-              <span className={`w-3.5 h-3.5 rounded-full border ${readiness === 'Ready' ? 'bg-emerald-500 border-emerald-600' : readiness === 'Progressing' ? 'bg-amber-500 border-amber-600' : 'bg-zinc-300 border-zinc-400'}`} />
-            </div>
+              <span className={`w-3.5 h-3.5 rounded-full border ${readiness === 'Ready' ? 'bg-emerald-500 border-emerald-600' : readiness === 'Progressing' ? 'bg-amber-500 border-amber-600' : 'bg-muted-foreground/30 border-muted-foreground/40'}`} />
+            </Card>
 
-            <div className="p-5 bg-white border border-zinc-100 rounded-lg flex justify-between items-center shadow-sm">
+            <Card className="p-5 flex-row justify-between items-center">
               <div>
-                <h3 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Composite Maturity Index</h3>
-                <p className="text-xl font-bold text-zinc-900 mt-1">{compositePercentage}%</p>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Composite Maturity Index</h3>
+                <p className="text-xl font-bold text-foreground mt-1">{compositePercentage}%</p>
               </div>
-              <span className="text-xs font-semibold text-zinc-400 bg-zinc-50 border px-2 py-1 rounded">
+              <span className="text-xs font-semibold text-muted-foreground bg-muted border border-border px-2 py-1 rounded">
                 {totalScorePoints}/50 pts
               </span>
-            </div>
+            </Card>
           </div>
 
           {/* RENDER PROGRESS ANALYSIS METRICS DISPLAY */}
-          <div className="p-6 bg-white border border-zinc-100 rounded-lg space-y-4">
-            <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Strategic Verification Matrix</h2>
+          <Card className="p-6 space-y-4">
+            <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Strategic Verification Matrix</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               {scoringDimensions.map(dim => {
                 const stepPercentage = (dim.score / 5) * 100
                 return (
                   <div key={dim.key} className="space-y-1">
                     <div className="flex justify-between items-baseline text-xs">
-                      <span className="font-semibold text-zinc-800 truncate pr-2">{dim.label}</span>
-                      <span className="font-bold text-zinc-900 shrink-0">{dim.score}/5</span>
+                      <span className="font-semibold text-foreground truncate pr-2">{dim.label}</span>
+                      <span className="font-bold text-foreground shrink-0">{dim.score}/5</span>
                     </div>
-                    <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-300 ${dim.score >= 4 ? 'bg-emerald-500' : dim.score >= 2.5 ? 'bg-amber-500' : 'bg-zinc-400'}`}
                         style={{ width: `${stepPercentage}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-zinc-400 leading-tight">{dim.info}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">{dim.info}</p>
                   </div>
                 )
               })}
             </div>
-          </div>
+          </Card>
 
           {initialData?.last_verified_date && (
-            <p className="text-[11px] text-zinc-400 italic">
+            <p className="text-[11px] text-muted-foreground italic">
               Audit matrix updated by {initialData.verified_by?.split('@')[0]} on {new Date(initialData.last_verified_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           )}
@@ -147,13 +150,13 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
       </div>
       {/* INPUT PANEL CONSOLE COLUMN (1 Column) */}
       <div className="space-y-4">
-          <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Audit Parameters Console</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Audit Parameters Console</h2>
           {!isInternal ? (
-            <div className="p-4 bg-zinc-50 border border-zinc-100 text-xs text-zinc-400 rounded-lg">
+            <div className="p-4 bg-muted border border-border text-xs text-muted-foreground rounded-xl">
               🔒 Read-Only Access. Operational parameters are restricted to portfolio review managers.
             </div>
           ) : (
-            <form onSubmit={handleUpdateScores} className="p-5 bg-white border border-zinc-100 rounded-lg shadow-sm space-y-4">
+            <form onSubmit={handleUpdateScores} className="p-5 bg-card border border-border rounded-xl shadow-sm space-y-4">
               {msg && <p className="p-2 bg-zinc-50 text-xs font-medium border rounded text-zinc-700">{msg}</p>}
 
               <div>
@@ -183,14 +186,14 @@ export default function ExitReadinessTabView({ companyId, initialData }: ExitRea
                 ))}
               </div>
 
-              <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+              <Button type="submit" disabled={saving} size="sm" className="w-full mt-2 gap-1.5">
                 {saving ? (
                   <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <Spinner size="sm" />
                     Syncing audit parameters…
                   </>
                 ) : 'Commit Matrix Updates'}
-              </button>
+              </Button>
             </form>
           )}
         </div>

@@ -6,6 +6,9 @@ import type { CompanyProfile } from '@/features/companies/types'
 import type { UpdateCompanyInput } from '@/features/companies/actions/updateCompany.action'
 import { useToast } from '@/hooks/use-toast'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { CompanyLogoUpload } from './CompanyLogoUpload'
 import { FigureDocumentSection } from './FigureDocumentSection'
 
@@ -256,11 +259,10 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
         <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
           Company name <span className="text-red-400">*</span>
         </label>
-        <input
+        <Input
           type="text"
           value={form.name}
           onChange={(e) => set('name', e.target.value)}
-          className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
 
@@ -269,12 +271,11 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
         <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
           Company Bio / Summary
         </label>
-        <textarea
+        <Textarea
           rows={3}
           value={form.bio ?? ''}
           onChange={(e) => set('bio', e.target.value || null)}
           placeholder="Brief description of business model, vision, and market..."
-          className="w-full p-3 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
 
@@ -332,12 +333,11 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
         {/* Country */}
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Country</label>
-          <input
+          <Input
             type="text"
             value={form.country ?? ''}
             onChange={(e) => set('country', e.target.value || null)}
             placeholder="e.g. Nigeria"
-            className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
           />
         </div>
 
@@ -346,12 +346,11 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Legal Entity / Year
           </label>
-          <input
+          <Input
             type="text"
             value={form.legal_entity ?? ''}
             onChange={(e) => set('legal_entity', e.target.value || null)}
             placeholder="e.g. Crediometer Ltd (2022)"
-            className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
           />
         </div>
       </div>
@@ -362,14 +361,13 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Amount Invested
           </label>
-          <input
+          <Input
             type="number"
             value={form.amount_invested ?? ''}
             onChange={(e) =>
               set('amount_invested', e.target.value ? parseFloat(e.target.value) : null)
             }
             placeholder="e.g. 50000"
-            className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
           />
         </div>
 
@@ -407,11 +405,10 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Investment Date
           </label>
-          <input
+          <Input
             type="date"
             value={form.investment_date ?? ''}
             onChange={(e) => set('investment_date', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
           />
         </div>
       </div>
@@ -421,43 +418,43 @@ export function CompanyIdentityEditForm({ company }: CompanyIdentityEditFormProp
         <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
           Syndicate Holdings & Structure
         </label>
-        <input
+        <Input
           type="text"
           value={form.syndicate_holdings ?? ''}
           onChange={(e) => set('syndicate_holdings', e.target.value || null)}
           placeholder="e.g. TVCLabs Syndicate A (15% share)"
-          className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
 
       {/* Website */}
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Website</label>
-        <input
+        <Input
           type="url"
           value={form.website ?? ''}
           onChange={(e) => set('website', e.target.value || null)}
           placeholder="https://example.com"
-          className="w-full h-9 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-2 border-t border-zinc-200">
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving || !form.name.trim()}
-          className="h-8 px-4 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors"
+          size="sm"
         >
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={handleCancel}
           disabled={saving}
-          className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   )

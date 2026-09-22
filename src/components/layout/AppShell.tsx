@@ -14,12 +14,10 @@ interface AppShellProps {
 
 export default function AppShell({ role, email, title, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  // New state tracking if the workspace layout is wide-canvas (sidebar collapsed)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white">
-
+    <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar
         role={role}
         email={email}
@@ -28,21 +26,18 @@ export default function AppShell({ role, email, title, children }: AppShellProps
         isCollapsed={isCollapsed}
       />
 
-      {/* Main Content Area: Smoothly transitions its margin-left or width alignment */}
-      <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
-        
+      <div className="flex min-w-0 flex-1 flex-col transition-all duration-300 ease-out">
         <Header
           title={title}
           onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
           onDesktopToggle={() => setIsCollapsed(!isCollapsed)}
           isCollapsed={isCollapsed}
         />
-        
-        <main className="flex-1 max-w-[1600px] w-full px-6 lg:px-10 py-6">
-          {children}
+
+        <main className="w-full flex-1 px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
+          <div className="mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
       </div>
-
     </div>
   )
 }

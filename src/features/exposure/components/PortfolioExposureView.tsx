@@ -7,6 +7,8 @@ import { ExposureByCompanyTable } from '@/features/exposure/components/ExposureB
 import { InstrumentTypeSummaryTable } from '@/features/exposure/components/InstrumentTypeSummaryTable'
 import { ExposureStackedBarChart } from '@/features/exposure/components/ExposureStackedBarChart'
 import type { PortfolioExposureData } from '@/features/exposure/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface PortfolioExposureViewProps {
   data: PortfolioExposureData
@@ -30,13 +32,13 @@ export function PortfolioExposureView({ data, asOfDate }: PortfolioExposureViewP
   }
 
   return (
-    <div className="space-y-14 max-w-[1600px] mx-auto py-2">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
 
       {/* Main Section Header */}
-      <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-border pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
               Consolidated Economic Exposure
             </h1>
             {asOfDate && (
@@ -45,7 +47,7 @@ export function PortfolioExposureView({ data, asOfDate }: PortfolioExposureViewP
               </span>
             )}
           </div>
-          <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
             {asOfDate
               ? `Point-in-Time Position View (As of ${new Date(asOfDate).toLocaleDateString('en-GB')}) — Reconstructing active instruments & pre-conversion positions as of date`
               : 'Active Positions Only — Converted, Terminated, or Exited Instruments Excluded'}
@@ -53,30 +55,32 @@ export function PortfolioExposureView({ data, asOfDate }: PortfolioExposureViewP
         </div>
 
         {/* Point-in-time Date Picker Control */}
-        <div className="flex items-center gap-2 bg-zinc-50 p-2 rounded-lg border border-zinc-200/80 shrink-0">
-          <Calendar className="w-4 h-4 text-zinc-400 ml-1 shrink-0" />
-          <span className="text-xs font-medium text-zinc-600 shrink-0">As of Date:</span>
-          <input
+        <div className="flex items-center gap-2 bg-muted/60 p-1.5 rounded-xl border border-border shrink-0">
+          <Calendar className="w-4 h-4 text-muted-foreground ml-1 shrink-0" />
+          <span className="text-xs font-medium text-foreground shrink-0">As of Date:</span>
+          <Input
             type="date"
             value={asOfDate ?? ''}
             onChange={(e) => handleDateChange(e.target.value)}
-            className="h-8 px-2.5 text-xs text-zinc-900 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1a23bd]"
+            className="h-8 text-xs w-auto bg-card"
           />
           {asOfDate && (
-            <button
+            <Button
+              size="xs"
+              variant="outline"
               onClick={handleReset}
-              className="h-8 px-2.5 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-md hover:bg-zinc-100 transition-colors inline-flex items-center gap-1"
               title="Reset to current state"
+              className="gap-1"
             >
               <RotateCcw className="w-3 h-3" />
               Reset
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {/* Consolidated Capital Ledger Strip */}
-      <div className="pb-4 border-b border-zinc-100">
+      <div className="pb-4 border-b border-border">
         <PortfolioSummaryBar {...data.summary} />
       </div>
 

@@ -6,6 +6,11 @@ import { saveDdrStatusAction } from '../actions/saveDdrStatus.action'
 import type { DdrStatusData, DgcDdrStatus } from '../types'
 import { useToast } from '@/hooks/use-toast'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Card } from '@/components/ui/card'
+import { Spinner } from '@/components/ui/spinner'
 
 interface DdrTabViewProps {
   companyId: string;
@@ -80,46 +85,46 @@ export default function DdrTabView({ companyId, initialData }: DdrTabViewProps) 
         <div className="lg:col-span-2 space-y-6">
           
           {/* RADAR SUMMARY BANNER STATUS CARD */}
-          <div className="p-5 bg-white border border-zinc-100 rounded-lg shadow-sm flex items-center justify-between gap-4">
+          <Card className="p-5 flex-row justify-between items-center gap-4">
             <div>
-              <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">DGC Verification Audit Tracker</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">DGC Verification Audit Tracker</span>
               <div className="flex items-center gap-3 mt-1">
-                <h3 className="text-2xl font-bold text-zinc-900 tracking-tight">Current Status</h3>
+                <h3 className="text-2xl font-bold text-foreground tracking-tight">Current Status</h3>
                 <span className={`px-2.5 py-0.5 border text-xs font-semibold rounded-md ${getBadgeStyle(status)}`}>
                   {status}
                 </span>
               </div>
             </div>
             {initialData?.last_updated_at && (
-              <p className="text-[11px] text-zinc-400 text-right leading-relaxed">
+              <p className="text-[11px] text-muted-foreground text-right leading-relaxed">
                 Logged by {initialData.updated_by}<br />
                 on {new Date(initialData.last_updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             )}
-          </div>
+          </Card>
 
           {/* LIAISON RECOGNITION PANEL */}
-          <div className="p-5 border border-zinc-100 bg-white rounded-lg flex items-center justify-between">
+          <Card className="p-5 flex-row justify-between items-center">
             <div>
-              <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Assigned Shared DGC Liaison</h4>
-              <p className="text-base font-semibold text-zinc-900 mt-1">{contact.trim() || 'No liaison bridge coordinate mapped yet.'}</p>
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Assigned Shared DGC Liaison</h4>
+              <p className="text-base font-semibold text-foreground mt-1">{contact.trim() || 'No liaison bridge coordinate mapped yet.'}</p>
             </div>
-            <span className="text-[10px] text-zinc-400 uppercase font-medium border bg-zinc-50 px-2 py-0.5 rounded tracking-wide">Liaison Profile</span>
-          </div>
+            <span className="text-[10px] text-muted-foreground uppercase font-medium border border-border bg-muted px-2 py-0.5 rounded tracking-wide">Liaison Profile</span>
+          </Card>
 
           {/* COMPACT NOTES RECORD VIEW CONTAINER */}
-          <div className="p-5 border border-zinc-100 bg-white rounded-lg space-y-2">
-            <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">DGC Communications Log & Outcome Threads</h4>
-            <div className="p-4 bg-zinc-50/50 rounded border border-zinc-100 min-h-24 text-zinc-700 whitespace-pre-wrap leading-relaxed">
+          <Card className="p-5 space-y-2">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">DGC Communications Log & Outcome Threads</h4>
+            <div className="p-4 bg-muted/50 rounded-lg border border-border min-h-24 text-foreground whitespace-pre-wrap leading-relaxed">
               {notes.trim() || 'No active operational notes logged regarding this data room context.'}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* DATA ROOM MANAGEMENT CONSOLE CONTROLLER (1 Column) */}
         <div className="space-y-4">
-          <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">DGC Integration Console</h2>
-          <form onSubmit={handleUpdateDdr} className="p-5 bg-white border border-zinc-100 rounded-lg shadow-sm space-y-4">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">DGC Integration Console</h2>
+          <form onSubmit={handleUpdateDdr} className="p-5 bg-card border border-border rounded-xl shadow-sm space-y-4">
             {msg && <p className="p-2 bg-zinc-50 border rounded text-xs font-medium text-zinc-700">{msg}</p>}
 
             <div>
@@ -131,22 +136,22 @@ export default function DdrTabView({ companyId, initialData }: DdrTabViewProps) 
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Shared Bridge DGC Contact</label>
-              <input type="text" placeholder="e.g. John Doe (Shared Team)" value={contact} onChange={(e) => setContact(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm outline-none transition-all" />
+              <Input type="text" placeholder="e.g. John Doe (Shared Team)" value={contact} onChange={(e) => setContact(e.target.value)} />
             </div>
 
             <div>
               <label className="text-xs font-medium text-zinc-400 uppercase block mb-1">Communications Summary / Notes Thread</label>
-              <textarea rows={6} placeholder="Record update logs, milestone gaps, or verification timelines from DGC..." value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm outline-none resize-none transition-all" />
+              <Textarea rows={6} placeholder="Record update logs, milestone gaps, or verification timelines from DGC..." value={notes} onChange={(e) => setNotes(e.target.value)} />
             </div>
 
-            <button type="submit" disabled={saving} className="w-full flex items-center justify-center gap-2 h-9 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] disabled:opacity-70 transition-colors mt-2">
+            <Button type="submit" disabled={saving} size="sm" className="w-full mt-2 gap-1.5">
               {saving ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Spinner size="sm" />
                   Committing log sync…
                 </>
               ) : 'Sync DGC Data State'}
-            </button>
+            </Button>
           </form>
         </div>
       </div>

@@ -1,0 +1,24 @@
+---
+description: UI reference workflow — inspect, propose, integrate, token pass
+globs: src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# UI Reference Workflow
+
+Before writing or changing UI in this repo, read and follow `ui-workflow.md` at the project root.
+
+## Stack (do not deviate without approval)
+- Next.js 16 App Router + React 19 + Tailwind v4 + shadcn primitives in `src/components/ui/`
+- Tokens in `src/app/globals.css`; compose with `cn()` from `src/lib/utils.ts`
+- Reuse existing components — no new UI libraries or npm deps without explicit approval
+
+## Required process
+1. **Inspect** reference sites (shadcn, beautifui, beui, rareui, transitions.dev, etc.) — use live demos
+2. **Propose** 2–3 approaches per component with source links — **stop and wait for go-ahead**
+3. **Integrate** the chosen approach using project tokens/primitives only
+4. **Token pass** — spacing, easing, motion checked against designsystemchecklist.com
+
+## Guardrails
+- Patterns must be grounded in the reference sources
+- Flag any guesswork where no reference matched

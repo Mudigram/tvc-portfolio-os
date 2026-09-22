@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createCompanyAction } from '@/features/companies/actions/createCompany.action'
 import type { CreateCompanyInput } from '@/features/companies/actions/createCompany.action'
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 
 const SECTORS = [
@@ -93,16 +95,11 @@ export function AddCompanyForm({ onClose }: AddCompanyFormProps) {
             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
               Company name <span className="text-red-400">*</span>
             </label>
-            <input
+            <Input
               type="text"
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
               placeholder="e.g. Payflux"
-              className="
-                w-full h-9 px-3 text-sm text-zinc-900 bg-white
-                border border-zinc-200 rounded-md placeholder:text-zinc-400
-                focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-              "
             />
           </div>
 
@@ -140,23 +137,18 @@ export function AddCompanyForm({ onClose }: AddCompanyFormProps) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Country
               </label>
-              <input
+              <Input
                 type="text"
                 value={form.country}
                 onChange={(e) => set('country', e.target.value)}
                 placeholder="e.g. Nigeria"
-                className="
-                  w-full h-9 px-3 text-sm text-zinc-900 bg-white
-                  border border-zinc-200 rounded-md placeholder:text-zinc-400
-                  focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-                "
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Founded year
               </label>
-              <input
+              <Input
                 type="number"
                 value={form.founded_year ?? ''}
                 onChange={(e) =>
@@ -165,11 +157,6 @@ export function AddCompanyForm({ onClose }: AddCompanyFormProps) {
                 placeholder="e.g. 2021"
                 min={1900}
                 max={new Date().getFullYear()}
-                className="
-                  w-full h-9 px-3 text-sm text-zinc-900 bg-white
-                  border border-zinc-200 rounded-md placeholder:text-zinc-400
-                  focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-                "
               />
             </div>
           </div>
@@ -179,38 +166,32 @@ export function AddCompanyForm({ onClose }: AddCompanyFormProps) {
             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
               Website
             </label>
-            <input
+            <Input
               type="url"
               value={form.website}
               onChange={(e) => set('website', e.target.value)}
               placeholder="https://example.com"
-              className="
-                w-full h-9 px-3 text-sm text-zinc-900 bg-white
-                border border-zinc-200 rounded-md placeholder:text-zinc-400
-                focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-              "
             />
           </div>
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-zinc-100">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={saving || !form.name.trim()}
-            className="
-              h-8 px-4 text-xs font-medium text-white bg-[#1a23bd]
-              rounded-md hover:bg-[#151c9a] disabled:opacity-40 transition-colors
-            "
+            size="sm"
           >
             {saving ? 'Creating…' : 'Create company'}
-          </button>
+          </Button>
         </div>
 
       </div>

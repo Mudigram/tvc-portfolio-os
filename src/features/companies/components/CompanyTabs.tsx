@@ -42,7 +42,7 @@ export default function CompanyTabs({ company, updatesTabElement, fundingTabElem
   return (
     <div className="space-y-6">
       {/* Tab bar */}
-      <div className="flex items-center gap-0.5 border-b border-zinc-100 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex items-center gap-0.5 border-b border-border overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {TABS.map((tab) => (
           <button
             key={tab}
@@ -50,14 +50,14 @@ export default function CompanyTabs({ company, updatesTabElement, fundingTabElem
             className={`
               px-4 py-2.5 text-sm transition-colors relative whitespace-nowrap shrink-0
               ${active === tab
-                ? 'text-zinc-900 font-medium'
-                : 'text-zinc-400 hover:text-zinc-700'
+                ? 'text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground'
               }
             `}
           >
             {tab}
             {active === tab && (
-              <span className="absolute bottom-0 left-0 right-0 h-px bg-[#1a23bd]" />
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary" />
             )}
           </button>
         ))}

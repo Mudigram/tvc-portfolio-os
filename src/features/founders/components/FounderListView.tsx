@@ -5,6 +5,10 @@ import { useTransition, useState } from 'react'
 import Link from 'next/link'
 import { AddFounderForm } from '@/features/founders/components/AddFounderForm'
 import type { FounderListItem } from '@/features/founders/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { FormSelect } from '@/components/ui/form-select'
+import { SearchX, X } from 'lucide-react'
 
 const HEALTH_STYLES: Record<string, string> = {
   Green: 'text-emerald-700 bg-emerald-50 border-emerald-200',
@@ -102,76 +106,79 @@ export function FoundersListView({
     <div className="space-y-6">
 
       {/* Page header */}
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between border-b border-border pb-5">
         <div>
-          <h1 className="text-lg font-medium text-zinc-900">Founders</h1>
-          <p className="text-sm text-zinc-400 mt-0.5">
-            {total} {total === 1 ? 'founder' : 'founders'} in CRM
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Founders Directory</h1>
+          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
+            {total} {total === 1 ? 'Founder Record' : 'Founder Records'} in CRM
           </p>
         </div>
-        <button
+        <Button
           onClick={() => setShowAddForm(true)}
-          className="h-8 px-4 text-xs font-medium text-white bg-[#1a23bd] rounded-md hover:bg-[#151c9a] transition-colors"
+          size="sm"
         >
           Add founder
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
 
         <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-          <input
+          <Input
             type="text"
             placeholder="Search name, email, startup…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="h-9 w-72 px-3 text-sm text-zinc-900 bg-white border border-zinc-200 rounded-md placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent"
+            className="h-9 w-72"
           />
-          <button
+          <Button
             type="submit"
-            className="h-9 px-3 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-md hover:border-zinc-300 transition-colors"
+            variant="outline"
+            size="sm"
           >
             Search
-          </button>
+          </Button>
         </form>
 
-        <select
+        <FormSelect
           value={currentFilters.industry ?? ''}
           onChange={(e) => updateParams({ industry: e.target.value || undefined })}
-          className="h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          className="w-40"
         >
           <option value="">All industries</option>
           {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
-        </select>
+        </FormSelect>
 
-        <select
+        <FormSelect
           value={currentFilters.stage ?? ''}
           onChange={(e) => updateParams({ stage: e.target.value || undefined })}
-          className="h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          className="w-36"
         >
           <option value="">All stages</option>
           {STAGES.map((s) => <option key={s}>{s}</option>)}
-        </select>
+        </FormSelect>
 
         {/* Linked / unlinked filter */}
-        <select
+        <FormSelect
           value={currentFilters.linked ?? ''}
           onChange={(e) => updateParams({ linked: e.target.value || undefined })}
-          className="h-9 px-3 text-sm text-zinc-600 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-900"
+          className="w-40"
         >
           <option value="">All founders</option>
           <option value="linked">Linked to company</option>
           <option value="unlinked">Not linked</option>
-        </select>
+        </FormSelect>
 
         {hasFilters && (
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleClear}
-            className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
           >
             Clear filters
-          </button>
+          </Button>
         )}
 
         <span className="text-xs text-zinc-400 ml-auto">
@@ -192,10 +199,26 @@ export function FoundersListView({
       {/* Table */}
       {founders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-sm font-medium text-zinc-900">No founders found</p>
-          <p className="text-sm text-zinc-400 mt-1">
-            {hasFilters ? 'Try adjusting your filters.' : 'No founders in the CRM yet.'}
+          <div className="w-12 h-12 rounded-2xl bg-muted/60 border border-border flex items-center justify-center mb-3">
+            <SearchX className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground">No founders found</h3>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+            {hasFilters
+              ? 'No founder matching your active filters. Try adjusting your search query or criteria.'
+              : 'No founders registered in the CRM yet.'}
           </p>
+          {hasFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClear}
+              className="mt-4 gap-1.5"
+            >
+              <X className="w-3.5 h-3.5" />
+              Reset Filters
+            </Button>
+          )}
         </div>
       ) : (
         <div className={`overflow-x-auto transition-opacity ${isPending ? 'opacity-50' : 'opacity-100'}`}>
@@ -288,13 +311,14 @@ export function FoundersListView({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-zinc-100">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => updateParams({ page: String(page - 1) })}
             disabled={page <= 1 || isPending}
-            className="h-8 px-3 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-md hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Previous
-          </button>
+          </Button>
 
           <div className="flex items-center gap-1">
             {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -327,13 +351,14 @@ export function FoundersListView({
             }
           </div>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => updateParams({ page: String(page + 1) })}
             disabled={page >= totalPages || isPending}
-            className="h-8 px-3 text-xs font-medium text-zinc-600 bg-white border border-zinc-200 rounded-md hover:border-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
 

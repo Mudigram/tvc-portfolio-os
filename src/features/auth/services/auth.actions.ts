@@ -103,7 +103,7 @@ export async function signInWithPasswordAction(
     admin: '/dashboard',
     internal: '/dashboard',
     angel: '/portfolio',
-    founder: '/my-company',
+    founder: '/founder-dashboard',
   }
   const redirectUrl = destinations[role] ?? '/dashboard'
 

@@ -25,9 +25,9 @@ function FormSelect({
         data-slot="form-select"
         className={cn(
           // Match SelectTrigger exactly
-          'h-9 w-full appearance-none rounded-md border border-zinc-200 bg-white pl-3 pr-8 text-sm text-zinc-900 outline-none transition-colors',
-          // Focus — brand colour ring
-          'focus:border-[#1a23bd] focus:ring-2 focus:ring-[#1a23bd]/15',
+          'h-9 w-full appearance-none rounded-md border border-border bg-input pl-3 pr-8 text-sm text-foreground outline-none transition-colors',
+          // Focus — brand colour ring via token
+          'focus:border-ring focus:ring-2 focus:ring-ring/15',
           // Disabled
           'disabled:cursor-not-allowed disabled:opacity-50',
           className
@@ -37,7 +37,7 @@ function FormSelect({
         {children}
       </select>
       {/* Custom chevron — mirrors SelectTrigger's ChevronDownIcon */}
-      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400">
+      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 9l6 6 6-6" />
         </svg>

@@ -11,6 +11,7 @@ import {
   toggleUserAccessAction,
 } from '../actions/settings.actions'
 import type { ManagedUser, UserRole } from '../types'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   users: ManagedUser[]
@@ -108,13 +109,14 @@ function InviteForm() {
             ))}
           </select>
         </div>
-        <button
+        <Button
           onClick={handleInvite}
           disabled={isPending || !email}
-          className="rounded-lg bg-[#1a23bd] px-4 py-2 text-sm font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors whitespace-nowrap"
+          size="sm"
+          className="whitespace-nowrap"
         >
           {isPending ? 'Sending…' : 'Send invite'}
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -180,13 +182,13 @@ function UserRow({ user }: { user: ManagedUser }) {
             </span>
           )}
           {roleDirty && (
-            <button
+            <Button
+              size="xs"
               onClick={handleRoleChange}
               disabled={isPending}
-              className="rounded-lg bg-[#1a23bd] px-2.5 py-1 text-xs font-medium text-white hover:bg-[#1520a8] disabled:opacity-50 transition-colors"
             >
               {isPending ? '…' : 'Save'}
-            </button>
+            </Button>
           )}
           {saved && !roleDirty && (
             <span className="text-xs text-emerald-600 font-medium">✓</span>

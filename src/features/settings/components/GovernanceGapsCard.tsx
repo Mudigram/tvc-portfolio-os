@@ -2,6 +2,7 @@
 
 import type { GovernanceGap } from '@/features/exposure/services/governance-gaps.service'
 import { ShieldAlert, AlertTriangle, FileWarning, CheckCircle2 } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 
 interface GovernanceGapsCardProps {
   gaps: GovernanceGap[]
@@ -12,7 +13,7 @@ export function GovernanceGapsCard({ gaps }: GovernanceGapsCardProps) {
   const missingEvidence = gaps.filter((g) => g.gap_type === 'missing_evidence')
 
   return (
-    <div className="p-6 bg-white border border-zinc-200 rounded-xl shadow-sm space-y-6">
+    <Card className="p-6 space-y-6">
       <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center">
@@ -103,6 +104,6 @@ export function GovernanceGapsCard({ gaps }: GovernanceGapsCardProps) {
           </div>
         </div>
       )}
-    </div>
+    </Card>
   )
 }

@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { updateHealthAction } from '@/features/companies/actions/updateHealth.actions'
 import type { CompanyProfile } from '@/features/companies/types'
 import { useToast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 type HealthValue = 'Green' | 'Amber' | 'Red'
 
@@ -130,17 +132,11 @@ export default function HealthEditForm({ companyId, current }: HealthEditFormPro
             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
               Notes
             </label>
-            <textarea
+            <Textarea
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="What is driving this status? What does the team need to do?"
-              className="
-                w-full px-3 py-2 text-sm text-zinc-900 bg-white
-                border border-zinc-200 rounded-md resize-none
-                placeholder:text-zinc-400
-                focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-              "
             />
           </div>
 
@@ -150,29 +146,26 @@ export default function HealthEditForm({ companyId, current }: HealthEditFormPro
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button
+            <Button
               onClick={handleConfirm}
               disabled={loading}
-              className="
-                h-8 px-4 text-xs font-medium text-white bg-[#1a23bd]
-                rounded-md hover:bg-[#151c9a] disabled:opacity-40
-                transition-colors
-              "
+              size="sm"
             >
               {loading ? 'Saving…' : 'Confirm'}
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setEditing(false)
                 setHealth((current.portfolio_health as HealthValue) ?? 'Green')
                 setNotes(current.health_notes ?? '')
                 setError(null)
               }}
-              disabled={loading}
-              className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

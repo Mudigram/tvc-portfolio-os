@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   MonitorPlay,
@@ -11,11 +11,13 @@ import {
   ChevronDown,
   Sparkles,
   Calendar,
+  Loader2,
 } from 'lucide-react'
 import type { HolderOption } from '@/features/exposure/services/holders.service'
 import type { SnapshotMode, HolderSnapshotData, PortfolioShowcaseData } from '../types'
 import PositionStatementCard from './PositionStatementCard'
 import PortfolioShowcaseCard from './PortfolioShowcaseCard'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   holders: HolderOption[]
@@ -35,7 +37,17 @@ export default function InvestorSnapshotView({
   portfolioShowcase,
 }: Props) {
   const router = useRouter()
-  const today = useMemo(() => new Date().toISOString().split('T')[0], [])
+  const [isPending, startTransition] = useTransition()
+
+  // Format local date reliably without UTC day shift
+  const formatLocalDate = (d: Date) => {
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  const today = useMemo(() => formatLocalDate(new Date()), [])
 
   // ── Draft state ──────────────────────────────────────────────────
   const [mode, setMode] = useState<SnapshotMode>(initialMode)
@@ -51,20 +63,21 @@ export default function InvestorSnapshotView({
     setAsOf(initialAsOf ?? today)
   }, [initialMode, initialHolderId, initialAsOf, today])
 
-  // Quick month presets (Current + past 6 month-ends)
+  // Quick month presets (Current Date + past 6 completed month-ends)
   const monthOptions = useMemo(() => {
     const opts: { label: string; dateStr: string }[] = []
     const now = new Date()
 
     opts.push({
       label: 'Current Date',
-      dateStr: now.toISOString().split('T')[0],
+      dateStr: formatLocalDate(now),
     })
 
-    for (let i = 0; i < 6; i++) {
+    // Past completed month-ends (e.g. End of August, End of July, etc.)
+    for (let i = 1; i <= 6; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
       const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-      const dateStr = d.toISOString().split('T')[0]
+      const dateStr = formatLocalDate(d)
       opts.push({ label: `End of ${label}`, dateStr })
     }
 
@@ -82,7 +95,9 @@ export default function InvestorSnapshotView({
       if (targetAsOf && targetAsOf !== today) {
         params.set('as_of', targetAsOf)
       }
-      router.push(`/investor-snapshot?${params.toString()}`)
+      startTransition(() => {
+        router.push(`/investor-snapshot?${params.toString()}`)
+      })
     },
     [today, router],
   )
@@ -109,6 +124,10 @@ export default function InvestorSnapshotView({
   const handleDateChange = (newAsOf: string) => {
     setAsOf(newAsOf)
     navigateWithParams(mode, holderId, newAsOf)
+  }
+
+  const handleResetDate = () => {
+    handleDateChange(today)
   }
 
   const handleGenerate = () => {
@@ -164,23 +183,23 @@ export default function InvestorSnapshotView({
 
           {/* Action buttons — shown when snapshot exists */}
           {hasSnapshot && (
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                id="investor-snapshot-copy-link"
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="xs"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-700 bg-white hover:bg-zinc-50 border border-zinc-200 transition-all shadow-2xs"
               >
-                <Link2 className="w-3.5 h-3.5 text-zinc-500" />
+                <Link2 className="w-3.5 h-3.5" />
                 {copied ? 'Copied!' : 'Share Link'}
-              </button>
-              <button
+              </Button>
+              <Button
                 id="investor-snapshot-print"
+                size="xs"
                 onClick={handlePrint}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#1a23bd] hover:bg-[#1520a8] transition-all shadow-xs"
               >
                 <Printer className="w-3.5 h-3.5" />
                 Print / Save PDF
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -283,15 +302,25 @@ export default function InvestorSnapshotView({
           </div>
 
           {/* Refresh / Generate Button */}
-          <button
+          <Button
             id="investor-snapshot-generate"
+            size="xs"
             onClick={handleGenerate}
-            disabled={!canGenerate}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#1a23bd] hover:bg-[#1520a8] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs ml-auto"
+            disabled={!canGenerate || isPending}
+            className="ml-auto min-w-[135px]"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Generate Snapshot
-          </button>
+            {isPending ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                Loading…
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5" />
+                Generate Snapshot
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -330,15 +359,15 @@ export default function InvestorSnapshotView({
 
         {/* Mode A: Position Statement */}
         {initialMode === 'position_statement' && holderSnapshot && (
-          <div id="snapshot-content">
-            <PositionStatementCard data={holderSnapshot} />
+          <div id="snapshot-content" className={`transition-opacity duration-150 ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
+            <PositionStatementCard data={holderSnapshot} onResetDate={handleResetDate} />
           </div>
         )}
 
         {/* Mode B: Portfolio Showcase */}
         {initialMode === 'portfolio_showcase' && portfolioShowcase && (
-          <div id="snapshot-content">
-            <PortfolioShowcaseCard data={portfolioShowcase} recipientName={customName} />
+          <div id="snapshot-content" className={`transition-opacity duration-150 ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
+            <PortfolioShowcaseCard data={portfolioShowcase} recipientName={customName} onResetDate={handleResetDate} />
           </div>
         )}
       </div>

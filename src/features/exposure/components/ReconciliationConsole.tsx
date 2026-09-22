@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import type { MasterLedgerStatus } from '@/features/exposure/types'
 import { reconcilePositionAction } from '@/features/exposure/actions/exposure.actions'
 import { CheckCircle2, AlertCircle, FileCheck, FileX, RefreshCw, ChevronDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 export interface PositionReconciliationItem {
   id: string
@@ -171,7 +173,9 @@ function CompanyGroup({
                           {feedback?.success ? '✓ Verified' : '✗ Failed'}
                         </span>
                       ) : (
-                        <button
+                        <Button
+                          size="xs"
+                          variant={isVerified ? "secondary" : "default"}
                           onClick={() => onReconcile(p.id, p.company_id)}
                           disabled={isExecuting || !p.has_source_document}
                           title={
@@ -179,17 +183,10 @@ function CompanyGroup({
                               ? 'Link a source document first'
                               : isVerified ? 'Re-verify position' : 'Reconcile & mark verified'
                           }
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold transition-colors ${
-                            isVerified
-                              ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                              : p.has_source_document
-                              ? 'bg-[#1a23bd] text-white hover:bg-[#151c9a]'
-                              : 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
-                          }`}
                         >
-                          {isExecuting && <RefreshCw className="w-3 h-3 animate-spin" />}
+                          {isExecuting && <RefreshCw className="w-3 h-3 animate-spin mr-1" />}
                           {isVerified ? 'Re-verify' : 'Reconcile'}
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>
@@ -262,29 +259,29 @@ export function ReconciliationConsole({ ledgerStatuses, positions }: Reconciliat
         {[
           { label: 'Portfolio Companies', value: totalCompanies, color: 'text-zinc-900' },
           { label: 'Fully Reconciled', value: `${reconciledCompanies} / ${totalCompanies}`, color: 'text-emerald-700' },
-          { label: 'Total Positions', value: totalPositions, color: 'text-zinc-900' },
-          { label: 'Verified Positions', value: `${verifiedPositions} / ${totalPositions}`, color: 'text-[#1a23bd]' },
+          { label: 'Total Positions', value: totalPositions, color: 'text-foreground' },
+          { label: 'Verified Positions', value: `${verifiedPositions} / ${totalPositions}`, color: 'text-primary' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm space-y-1">
-            <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide">{label}</p>
+          <Card key={label} className="p-4 space-y-1">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
             <p className={`text-2xl font-bold tracking-tight ${color}`}>{value}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Overall progress bar */}
-      <div className="bg-white border border-zinc-100 rounded-xl p-4 shadow-sm space-y-2">
+      <Card className="p-4 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-medium text-zinc-600">Overall reconciliation progress</span>
-          <span className="font-bold text-zinc-900">{overallPct}%</span>
+          <span className="font-medium text-muted-foreground">Overall reconciliation progress</span>
+          <span className="font-bold text-foreground">{overallPct}%</span>
         </div>
-        <div className="w-full h-2 rounded-full bg-zinc-100 overflow-hidden">
+        <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${overallPct === 100 ? 'bg-emerald-500' : 'bg-[#1a23bd]'}`}
+            className={`h-full rounded-full transition-all duration-500 ${overallPct === 100 ? 'bg-emerald-500' : 'bg-primary'}`}
             style={{ width: `${overallPct}%` }}
           />
         </div>
-      </div>
+      </Card>
 
       {/* ── Filter & Search ────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

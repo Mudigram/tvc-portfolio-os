@@ -10,7 +10,7 @@ const ROLE_REDIRECTS: Record<UserRole, string> = {
   admin: '/dashboard',
   internal: '/dashboard',
   angel: '/portfolio',
-  founder: '/founder',
+  founder: '/founder-dashboard',
 }
 
 function AuthCallbackContent() {

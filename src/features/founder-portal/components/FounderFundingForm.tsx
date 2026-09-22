@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { updateFundingAction } from '@/features/founder-portal/actions/updateFunding.action'
 import type { FundingStatus, UpdateFundingInput } from '@/features/founder-portal/types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { FormSelect } from '@/components/ui/form-select'
 
 const MATERIALS_STATUSES = ['Not started', 'In progress', 'Ready to share']
 const LEAD_STATUSES = ['Not identified', 'In discussion', 'Soft circled', 'Confirmed']
@@ -128,7 +131,7 @@ export function FounderFundingForm({ companyId, current }: FounderFundingFormPro
           onChange={(v) => set('runway_months', v)} />
         <NumberField label="Raise target (USD)" value={form.current_raise_target}
           onChange={(v) => set('current_raise_target', v)} />
-        <TextField label="Instrument" value={form.instrument}
+        <StringField label="Instrument" value={form.instrument}
           onChange={(v) => set('instrument', v)} placeholder="e.g. SAFE, Priced round" />
         <NumberField label="Valuation cap (USD)" value={form.valuation_cap}
           onChange={(v) => set('valuation_cap', v)} />
@@ -137,14 +140,13 @@ export function FounderFundingForm({ companyId, current }: FounderFundingFormPro
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Lead investor status
           </label>
-          <select
+          <FormSelect
             value={form.lead_investor_status ?? ''}
             onChange={(e) => set('lead_investor_status', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="">Select status</option>
             {LEAD_STATUSES.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          </FormSelect>
         </div>
 
         <NumberField label="Existing commitments (USD)" value={form.existing_commitments}
@@ -154,14 +156,13 @@ export function FounderFundingForm({ companyId, current }: FounderFundingFormPro
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
             Investor materials status
           </label>
-          <select
+          <FormSelect
             value={form.investor_materials_status ?? ''}
             onChange={(e) => set('investor_materials_status', e.target.value || null)}
-            className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
           >
             <option value="">Select status</option>
             {MATERIALS_STATUSES.map((s) => <option key={s}>{s}</option>)}
-          </select>
+          </FormSelect>
         </div>
       </div>
 
@@ -178,16 +179,22 @@ export function FounderFundingForm({ companyId, current }: FounderFundingFormPro
       </label>
 
       <div className="flex items-center gap-3 pt-1">
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="h-8 px-4 text-xs font-medium text-white bg-zinc-900 rounded-md hover:bg-zinc-800 disabled:opacity-40 transition-colors"
+          size="sm"
         >
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
-        <button onClick={handleCancel} disabled={saving} className="text-xs text-zinc-400 hover:text-zinc-700 transition-colors">
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleCancel}
+          disabled={saving}
+        >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -202,18 +209,17 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
-function TextField({ label, value, onChange, placeholder }: {
-  label: string; value: string | null; onChange: (v: string | null) => void; placeholder?: string
+function StringField({ label, value, placeholder, onChange }: {
+  label: string; value: string | null; placeholder?: string; onChange: (v: string | null) => void
 }) {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{label}</label>
-      <input
+      <Input
         type="text"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value || null)}
         placeholder={placeholder}
-        className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900"
       />
     </div>
   )
@@ -225,11 +231,10 @@ function NumberField({ label, value, onChange }: {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{label}</label>
-      <input
+      <Input
         type="number"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
-        className="w-full h-9 px-3 text-sm border border-zinc-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-zinc-900"
       />
     </div>
   )

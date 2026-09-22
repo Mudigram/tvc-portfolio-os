@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast'
 import { FileText, Plus, ExternalLink, Trash2, ShieldCheck, AlertTriangle, Clock, HelpCircle } from 'lucide-react'
 
 import { FormSelect } from '@/components/ui/form-select'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface FigureDocumentSectionProps {
   companyId: string
@@ -139,14 +141,16 @@ export function FigureDocumentSection({
           Evidence / Source Docs ({linkedDocs.length})
         </span>
         {!adding && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="xs"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1 text-xs text-[#1a23bd] hover:text-[#151c9a] font-medium transition-colors"
+            className="text-primary hover:text-primary"
           >
             <Plus className="w-3 h-3" />
             Attach Evidence
-          </button>
+          </Button>
         )}
       </div>
 
@@ -210,25 +214,25 @@ export function FigureDocumentSection({
         <form onSubmit={handleAddDocument} className="p-3 bg-zinc-50 border border-zinc-200 rounded-lg space-y-3 mt-2">
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-zinc-500 uppercase">Document Title / Reference</label>
-            <input
+            <Input
               type="text"
               required
               placeholder="e.g. Executed SAFE Agreement 2024.pdf"
               value={docName}
               onChange={(e) => setDocName(e.target.value)}
-              className="w-full h-8 px-2.5 text-xs text-zinc-900 bg-white border border-zinc-200 rounded focus:outline-none focus:ring-1 focus:ring-zinc-900"
+              className="h-8 text-xs"
             />
           </div>
 
           <div className="space-y-1">
             <label className="text-[11px] font-medium text-zinc-500 uppercase">Document URL / Storage Link</label>
-            <input
+            <Input
               type="url"
               required
               placeholder="https://..."
               value={docUrl}
               onChange={(e) => setDocUrl(e.target.value)}
-              className="w-full h-8 px-2.5 text-xs text-zinc-900 bg-white border border-zinc-200 rounded focus:outline-none focus:ring-1 focus:ring-zinc-900"
+              className="h-8 text-xs"
             />
           </div>
 
@@ -248,31 +252,32 @@ export function FigureDocumentSection({
 
             <div className="space-y-1">
               <label className="text-[11px] font-medium text-zinc-500 uppercase">Reconciliation Note</label>
-              <input
+              <Input
                 type="text"
-                placeholder="Optional notes"
+                placeholder="e.g. Verified against bank wire"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full h-8 px-2 text-xs text-zinc-900 bg-white border border-zinc-200 rounded focus:outline-none"
+                className="h-8 text-xs"
               />
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-1">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="xs"
               onClick={() => setAdding(false)}
-              className="px-2.5 py-1 text-xs text-zinc-500 hover:text-zinc-700"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={submitting}
-              className="px-3 py-1 text-xs font-medium text-white bg-[#1a23bd] hover:bg-[#151c9a] rounded transition-colors disabled:opacity-50"
+              size="xs"
             >
               {submitting ? 'Linking...' : 'Save Document'}
-            </button>
+            </Button>
           </div>
         </form>
       )}

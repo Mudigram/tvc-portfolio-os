@@ -46,14 +46,14 @@ export default async function SettingsPage() {
   const entitiesElement   = <TvcEntitiesTabView entities={entities} />
 
   return (
-    <div className="space-y-8 max-w-[1200px] mx-auto py-2">
+    <div className="space-y-6 max-w-5xl mx-auto">
 
       {/* Page header */}
-      <div className="border-b border-zinc-100 pb-6">
-        <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+      <div className="border-b border-border pb-5">
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">
           Settings
         </h1>
-        <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
           Platform configuration — internal & admin access
         </p>
       </div>

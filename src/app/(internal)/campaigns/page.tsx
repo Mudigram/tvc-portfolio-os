@@ -24,14 +24,14 @@ export default async function CampaignsPage() {
   const history = await getCampaignHistory()
 
   return (
-    <div className="space-y-12 max-w-[1200px] mx-auto py-2">
+    <div className="space-y-8 max-w-5xl mx-auto">
 
       {/* Page header */}
-      <div className="border-b border-zinc-100 pb-6">
-        <h1 className="text-xl font-semibold text-zinc-900 tracking-tight">
+      <div className="border-b border-border pb-5">
+        <h1 className="text-xl font-semibold text-foreground tracking-tight">
           Campaigns
         </h1>
-        <p className="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-medium">
+        <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
           Compose and send emails to angels, founders, and portfolio companies
         </p>
       </div>
@@ -39,11 +39,11 @@ export default async function CampaignsPage() {
       {/* Compose */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">New campaign</h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <h2 className="text-base font-semibold text-foreground">New campaign</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Fill in the details, preview recipients, then send.
             Emails are sent from{' '}
-            <code className="text-xs bg-zinc-100 px-1 py-0.5 rounded">
+            <code className="text-xs bg-muted border border-border text-foreground px-1.5 py-0.5 rounded">
               {claims.email.split('@')[0]} via TVCLabs &lt;portfolio@tvclabs.com&gt;
             </code>
           </p>
