@@ -55,7 +55,7 @@ export function getRoleRedirect(role: UserRole): string {
     admin: '/dashboard',
     internal: '/dashboard',
     angel: '/portfolio',
-    founder: '/my-company',
+    founder: '/founder-dashboard',
   }
   return destinations[role] ?? '/login'
 }
