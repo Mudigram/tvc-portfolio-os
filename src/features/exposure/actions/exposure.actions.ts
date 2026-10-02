@@ -5,6 +5,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service'
 import { getClaims } from '@/features/auth/services/auth.server'
 import type { ExposureStatus, ExposureType, HolderType } from '@/features/exposure/types'
 
@@ -96,15 +97,21 @@ export async function updateExposureRow(
   // If amount_invested is provided, insert or update position event in exposure_events
   if (amount_invested !== null && amount_invested > 0) {
     const today = new Date().toISOString().split('T')[0]
+    let eventClient: any = supabase
+    try {
+      eventClient = createServiceRoleClient()
+    } catch {
+      eventClient = supabase
+    }
     
     // Check if an existing event exists for this position
-    const { data: existingEvents } = await supabase
+    const { data: existingEvents } = await eventClient
       .from('exposure_events')
       .select('id, amount')
       .eq('position_id', exposureId)
 
     if (!existingEvents || existingEvents.length === 0) {
-      const { error: insertErr } = await supabase.from('exposure_events').insert({
+      const { error: insertErr } = await eventClient.from('exposure_events').insert({
         position_id: exposureId,
         event_type: 'investment',
         effective_date: issue_date || today,
@@ -116,7 +123,7 @@ export async function updateExposureRow(
         console.error('[exposure] event insert error:', insertErr.message)
       }
     } else if (existingEvents.length === 1 && Number(existingEvents[0].amount) !== amount_invested) {
-      const { error: updateErr } = await supabase
+      const { error: updateErr } = await eventClient
         .from('exposure_events')
         .update({
           amount: amount_invested,
@@ -131,6 +138,7 @@ export async function updateExposureRow(
 
   revalidatePath(`/companies/${companyId}`)
   revalidatePath('/exposure')
+  revalidatePath('/investor-snapshot')
 
   return { success: true }
 }
@@ -272,7 +280,13 @@ export async function createExposureRow(
   // Insert initial investment event into exposure_events log ledger
   if (amount_invested !== null && amount_invested > 0) {
     const today = new Date().toISOString().split('T')[0]
-    const { error: eventError } = await supabase.from('exposure_events').insert({
+    let eventClient: any = supabase
+    try {
+      eventClient = createServiceRoleClient()
+    } catch {
+      eventClient = supabase
+    }
+    const { error: eventError } = await eventClient.from('exposure_events').insert({
       position_id: newExposure.id,
       event_type: 'investment',
       effective_date: issue_date || today,
