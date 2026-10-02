@@ -33,7 +33,7 @@ function deriveLogoUrl(
 // Point-in-time status reconstruction.
 function reconstructEffectiveStatus(
   currentStatus: string,
-  events: { event_type: string; effective_date: string }[],
+  events: { event_type?: string; effective_date?: string }[],
   cutoff: Date,
 ): string {
   if (currentStatus !== 'Converted' && currentStatus !== 'Exited') return currentStatus
@@ -41,9 +41,9 @@ function reconstructEffectiveStatus(
     .filter((e) => e.event_type === 'conversion' || e.event_type === 'exit')
     .sort(
       (a, b) =>
-        new Date(a.effective_date).getTime() - new Date(b.effective_date).getTime(),
+        new Date(a.effective_date ?? '').getTime() - new Date(b.effective_date ?? '').getTime(),
     )[0]
-  if (terminalEvent && new Date(terminalEvent.effective_date) > cutoff) return 'Active'
+  if (terminalEvent && terminalEvent.effective_date && new Date(terminalEvent.effective_date) > cutoff) return 'Active'
   return currentStatus
 }
 
@@ -80,26 +80,26 @@ export async function getHolderSnapshot(
 ): Promise<HolderSnapshotData | null> {
   const supabase = await createServerClient()
 
-  // 1. Fetch positions for this holder from exposure_positions with joined holders & companies
+  // 1. Fetch positions for this holder from exposure_positions with joined holders, companies, and exposure_events
   const { data, error } = await supabase
     .from('exposure_positions')
     .select(`
       id,
       holder_id,
       exposure_type,
-      amount_invested,
       ownership_pct,
       status,
       issue_date,
       created_at,
-      companies ( id, name, sector, stage, portfolio_health, logo_path ),
+      companies ( id, name, sector, stage, portfolio_health, logo_path, amount_invested ),
       holders ( id, name ),
       exposure_events ( amount, event_type, effective_date )
     `)
     .eq('holder_id', holderId)
 
   if (error) {
-    console.error('[getHolderSnapshot] query info:', error.message)
+    console.error('[getHolderSnapshot] query error:', error.message)
+    return null
   }
 
   // Resolve holder name from joined record
@@ -135,6 +135,7 @@ export async function getHolderSnapshot(
     const company = rawCo as unknown as {
       id: string; name: string; sector: string | null; stage: string | null
       portfolio_health: 'Green' | 'Amber' | 'Red' | null; logo_path?: string | null
+      amount_invested?: number | null
     } | null
     if (!company) continue
 
@@ -143,15 +144,15 @@ export async function getHolderSnapshot(
       continue
     }
 
-    const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+    const events = (row.exposure_events as { amount: number; event_type?: string; effective_date?: string }[]) ?? []
 
     // Sum all events on or before the cutoff date
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
     let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-    // Fallback: If exposure_events has no rows/events for this position, fall back to amount_invested on exposure_positions
-    if (amountInvested <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
-      amountInvested = Number(row.amount_invested)
+    // Fallback: If no exposure_events exist yet, check company.amount_invested
+    if (amountInvested <= 0 && company.amount_invested && Number(company.amount_invested) > 0) {
+      amountInvested = Number(company.amount_invested)
     }
 
     const effectiveStatus = asOfDate
@@ -191,19 +192,19 @@ export async function getHolderSnapshot(
 
     for (const row of (data ?? [])) {
       const rawCo = Array.isArray(row.companies) ? row.companies[0] : row.companies
-      const company = rawCo as unknown as { id: string } | null
+      const company = rawCo as unknown as { id: string; amount_invested?: number | null } | null
       if (!company) continue
 
       if (row.issue_date && row.issue_date > c.cutoffDateStr) {
         continue
       }
 
-      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+      const events = (row.exposure_events as { amount: number; event_type?: string; effective_date?: string }[]) ?? []
       const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
       let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-      if (amt <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
-        amt = Number(row.amount_invested)
+      if (amt <= 0 && company.amount_invested && Number(company.amount_invested) > 0) {
+        amt = Number(company.amount_invested)
       }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
@@ -259,12 +260,11 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       id,
       holder_id,
       exposure_type,
-      amount_invested,
       ownership_pct,
       status,
       issue_date,
       created_at,
-      companies ( id, name, sector, stage, portfolio_health, logo_path ),
+      companies ( id, name, sector, stage, portfolio_health, logo_path, amount_invested ),
       exposure_events ( amount, event_type, effective_date )
     `)
     .in('holder_id', TVCLABS_HOLDER_IDS)
@@ -291,6 +291,7 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
     const company = rawCo as unknown as {
       id: string; name: string; sector: string | null; stage: string | null
       portfolio_health: 'Green' | 'Amber' | 'Red' | null; logo_path?: string | null
+      amount_invested?: number | null
     } | null
     if (!company) continue
 
@@ -298,12 +299,12 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       continue
     }
 
-    const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+    const events = (row.exposure_events as { amount: number; event_type?: string; effective_date?: string }[]) ?? []
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
     let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-    if (amountInvested <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
-      amountInvested = Number(row.amount_invested)
+    if (amountInvested <= 0 && company.amount_invested && Number(company.amount_invested) > 0) {
+      amountInvested = Number(company.amount_invested)
     }
 
     // Reconstruct status
@@ -357,19 +358,19 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
 
     for (const row of data) {
       const rawCo = Array.isArray(row.companies) ? row.companies[0] : row.companies
-      const company = rawCo as unknown as { id: string } | null
+      const company = rawCo as unknown as { id: string; amount_invested?: number | null } | null
       if (!company) continue
 
       if (row.issue_date && row.issue_date > c.cutoffDateStr) {
         continue
       }
 
-      const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
+      const events = (row.exposure_events as { amount: number; event_type?: string; effective_date?: string }[]) ?? []
       const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
       let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
 
-      if (amt <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
-        amt = Number(row.amount_invested)
+      if (amt <= 0 && company.amount_invested && Number(company.amount_invested) > 0) {
+        amt = Number(company.amount_invested)
       }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)

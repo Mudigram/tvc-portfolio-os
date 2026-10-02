@@ -93,17 +93,40 @@ export async function updateExposureRow(
     return { success: false, error: error.message }
   }
 
-  // If amount_invested is provided, insert a position event update if needed
-  if (amount_invested !== null) {
+  // If amount_invested is provided, insert or update position event in exposure_events
+  if (amount_invested !== null && amount_invested > 0) {
     const today = new Date().toISOString().split('T')[0]
-    await supabase.from('exposure_events').insert({
-      position_id: exposureId,
-      event_type: 'investment',
-      effective_date: issue_date || today,
-      amount: amount_invested,
-      currency: 'USD',
-      created_by: claims.userId,
-    })
+    
+    // Check if an existing event exists for this position
+    const { data: existingEvents } = await supabase
+      .from('exposure_events')
+      .select('id, amount')
+      .eq('position_id', exposureId)
+
+    if (!existingEvents || existingEvents.length === 0) {
+      const { error: insertErr } = await supabase.from('exposure_events').insert({
+        position_id: exposureId,
+        event_type: 'investment',
+        effective_date: issue_date || today,
+        amount: amount_invested,
+        currency: 'USD',
+        created_by: claims.userId,
+      })
+      if (insertErr) {
+        console.error('[exposure] event insert error:', insertErr.message)
+      }
+    } else if (existingEvents.length === 1 && Number(existingEvents[0].amount) !== amount_invested) {
+      const { error: updateErr } = await supabase
+        .from('exposure_events')
+        .update({
+          amount: amount_invested,
+          effective_date: issue_date || today,
+        })
+        .eq('id', existingEvents[0].id)
+      if (updateErr) {
+        console.error('[exposure] event update error:', updateErr.message)
+      }
+    }
   }
 
   revalidatePath(`/companies/${companyId}`)
