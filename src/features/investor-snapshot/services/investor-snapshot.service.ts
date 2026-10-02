@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service'
 import { TVCLABS_HOLDER_IDS } from '@/features/exposure/types'
 import type {
   HolderPositionCard,
@@ -7,6 +8,15 @@ import type {
   PortfolioShowcaseData,
   MonthlyValuePoint,
 } from '../types'
+
+// Helper to get Supabase client (service role bypasses RLS so exposure_events are never hidden)
+async function getSupabaseClient() {
+  try {
+    return createServiceRoleClient()
+  } catch {
+    return await createServerClient()
+  }
+}
 
 // Formats a Date object to YYYY-MM-DD using local time
 function formatLocalDateStr(d: Date): string {
@@ -18,7 +28,7 @@ function formatLocalDateStr(d: Date): string {
 
 // Derives a Supabase Storage public URL for a company logo path.
 function deriveLogoUrl(
-  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  supabase: any,
   logoPath: string | null | undefined,
 ): string | null {
   if (!logoPath) return null
@@ -78,7 +88,7 @@ export async function getHolderSnapshot(
   holderId: string,
   asOfDate?: string,
 ): Promise<HolderSnapshotData | null> {
-  const supabase = await createServerClient()
+  const supabase = await getSupabaseClient()
 
   // 1. Fetch positions for this holder from exposure_positions with joined holders, companies, and exposure_events
   const { data, error } = await supabase
@@ -252,7 +262,7 @@ export async function getHolderSnapshot(
 // MODE B — Portfolio Showcase: TVCLabs' full portfolio for external investors
 // ─────────────────────────────────────────────────────────────────────────────
 export async function getPortfolioShowcase(asOfDate?: string): Promise<PortfolioShowcaseData> {
-  const supabase = await createServerClient()
+  const supabase = await getSupabaseClient()
 
   const { data, error } = await supabase
     .from('exposure_positions')

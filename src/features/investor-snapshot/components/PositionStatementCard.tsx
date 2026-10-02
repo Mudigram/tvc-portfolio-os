@@ -4,12 +4,15 @@ import { Button } from '@/components/ui/button'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
+const formatCurrency = (amount: number | null | undefined) => {
+  const n = typeof amount === 'number' ? amount : Number(amount)
+  if (isNaN(n)) return '$0'
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(n)
+}
 
 const formatDate = (dateStr: string) =>
   new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', {
