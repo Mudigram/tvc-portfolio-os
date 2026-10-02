@@ -80,22 +80,7 @@ export async function getHolderSnapshot(
 ): Promise<HolderSnapshotData | null> {
   const supabase = await createServerClient()
 
-  // 1. First fetch holder profile from holders table
-  const { data: holder, error: holderErr } = await supabase
-    .from('holders')
-    .select('id, name')
-    .eq('id', holderId)
-    .maybeSingle()
-
-  if (holderErr || !holder) {
-    if (holderErr) console.error('[getHolderSnapshot] holder lookup error:', holderErr.message)
-    return null
-  }
-
-  const holderName = holder.name ?? 'Investor'
-  const holderEmail = null
-
-  // 2. Fetch positions for this holder
+  // 1. Fetch positions for this holder from exposure_positions with joined holders & companies
   const { data, error } = await supabase
     .from('exposure_positions')
     .select(`
@@ -108,15 +93,40 @@ export async function getHolderSnapshot(
       issue_date,
       created_at,
       companies ( id, name, sector, stage, portfolio_health, logo_path ),
+      holders ( id, name ),
       exposure_events ( amount, event_type, effective_date )
     `)
     .eq('holder_id', holderId)
 
   if (error) {
-    console.error('[getHolderSnapshot] query error:', error.message)
-    return null
+    console.error('[getHolderSnapshot] query info:', error.message)
   }
 
+  // Resolve holder name from joined record
+  let holderName = 'Investor'
+  if (data && data.length > 0) {
+    const rawHolder = Array.isArray(data[0].holders) ? data[0].holders[0] : data[0].holders
+    if (rawHolder && rawHolder.name) {
+      holderName = rawHolder.name
+    }
+  }
+
+  // Fallback: direct lookup on holders table if name not resolved yet or if positions empty
+  if (holderName === 'Investor') {
+    const { data: directHolder } = await supabase
+      .from('holders')
+      .select('name')
+      .eq('id', holderId)
+      .maybeSingle()
+
+    if (directHolder?.name) {
+      holderName = directHolder.name
+    } else if (!data || data.length === 0) {
+      return null
+    }
+  }
+
+  const holderEmail = null
   const cutoff = asOfDate ? new Date(asOfDate + 'T23:59:59') : new Date()
   const positions: HolderPositionCard[] = []
 
@@ -128,12 +138,9 @@ export async function getHolderSnapshot(
     } | null
     if (!company) continue
 
-    // Point-in-time check: exclude positions issued or created after asOfDate
-    if (asOfDate) {
-      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
-      if (issueOrCreated && issueOrCreated > asOfDate) {
-        continue
-      }
+    // Point-in-time check: exclude positions issued after asOfDate if issue_date is provided
+    if (asOfDate && row.issue_date && row.issue_date > asOfDate) {
+      continue
     }
 
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
@@ -153,11 +160,7 @@ export async function getHolderSnapshot(
 
     if (asOfDate && effectiveStatus !== 'Active') continue
 
-    // Position must have positive amount or positive ownership on cutoff date
     const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : null
-    if (amountInvested <= 0 && (!ownershipPct || ownershipPct <= 0)) {
-      continue
-    }
 
     positions.push({
       position_id: row.id,
@@ -191,9 +194,7 @@ export async function getHolderSnapshot(
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
 
-      // Point-in-time check for this cutoff
-      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
-      if (issueOrCreated && issueOrCreated > c.cutoffDateStr) {
+      if (row.issue_date && row.issue_date > c.cutoffDateStr) {
         continue
       }
 
@@ -293,12 +294,8 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
     } | null
     if (!company) continue
 
-    // Point-in-time check: exclude positions issued or created after asOfDate
-    if (asOfDate) {
-      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
-      if (issueOrCreated && issueOrCreated > asOfDate) {
-        continue
-      }
+    if (asOfDate && row.issue_date && row.issue_date > asOfDate) {
+      continue
     }
 
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
@@ -317,9 +314,6 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
     if (asOfDate && effectiveStatus !== 'Active') continue
 
     const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : 0
-    if (amountInvested <= 0 && ownershipPct <= 0) {
-      continue
-    }
 
     const existing = companyMap.get(company.id)
     if (existing) {
@@ -366,9 +360,7 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       const company = rawCo as unknown as { id: string } | null
       if (!company) continue
 
-      // Point-in-time check for this cutoff
-      const issueOrCreated = row.issue_date || (row.created_at ? row.created_at.split('T')[0] : null)
-      if (issueOrCreated && issueOrCreated > c.cutoffDateStr) {
+      if (row.issue_date && row.issue_date > c.cutoffDateStr) {
         continue
       }
 

@@ -24,16 +24,20 @@ export default async function InvestorSnapshotPage({ searchParams }: Props) {
   const mode: SnapshotMode =
     params.mode === 'showcase' ? 'portfolio_showcase' : 'position_statement'
 
-  const holderId = params.holder_id
+  const rawHolderId = params.holder_id
   const asOf = params.as_of
 
   // Always load the holders list for the picker dropdown
   const holders = await getHoldersForPicker()
 
+  // Default to first investor in picker list if mode is position_statement and no holder_id passed in URL
+  const effectiveHolderId =
+    rawHolderId || (mode === 'position_statement' && holders.length > 0 ? holders[0].id : undefined)
+
   // Fetch snapshot data depending on mode + params
   const [holderSnapshot, portfolioShowcase] = await Promise.all([
-    mode === 'position_statement' && holderId
-      ? getHolderSnapshot(holderId, asOf)
+    mode === 'position_statement' && effectiveHolderId
+      ? getHolderSnapshot(effectiveHolderId, asOf)
       : Promise.resolve(null),
     mode === 'portfolio_showcase'
       ? getPortfolioShowcase(asOf)
@@ -44,7 +48,7 @@ export default async function InvestorSnapshotPage({ searchParams }: Props) {
     <InvestorSnapshotView
       holders={holders}
       initialMode={mode}
-      initialHolderId={holderId}
+      initialHolderId={effectiveHolderId}
       initialAsOf={asOf}
       holderSnapshot={holderSnapshot}
       portfolioShowcase={portfolioShowcase}
