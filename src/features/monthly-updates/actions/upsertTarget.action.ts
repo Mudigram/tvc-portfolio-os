@@ -27,24 +27,70 @@ export async function upsertTargetAction(
 
   const supabase = await createServerClient()
 
-  const { error } = await supabase
-    .from('reporting_targets')
-    .upsert(
-      {
-        company_id: input.companyId,
-        month: input.month,
-        year: input.year,
-        target_revenue: input.targetRevenue != null ? Number(input.targetRevenue) : null,
-        target_mrr: input.targetMrr != null ? Number(input.targetMrr) : null,
-        key_milestones: input.keyMilestones?.trim() || null,
-        created_by: claims.email,
-      },
-      { onConflict: 'company_id,month,year' }
-    )
+  const payload = {
+    company_id: input.companyId,
+    month: Number(input.month),
+    year: Number(input.year),
+    target_revenue:
+      input.targetRevenue != null && !isNaN(Number(input.targetRevenue))
+        ? Number(input.targetRevenue)
+        : null,
+    target_mrr:
+      input.targetMrr != null && !isNaN(Number(input.targetMrr))
+        ? Number(input.targetMrr)
+        : null,
+    key_milestones: input.keyMilestones?.trim() || null,
+    created_by: claims.email,
+  }
 
-  if (error) {
-    console.error('[upsertTarget.action] error:', error.message)
-    return { success: false, error: 'Failed to save reporting target.' }
+  // 1. Try standard upsert first
+  const { error: upsertErr } = await supabase
+    .from('reporting_targets')
+    .upsert(payload, { onConflict: 'company_id,month,year' })
+
+  if (!upsertErr) {
+    revalidatePath(`/companies/${input.companyId}`)
+    revalidatePath('/updates')
+    revalidatePath('/my-company')
+    return { success: true }
+  }
+
+  console.warn('[upsertTarget.action] upsert failed, trying fallback check:', upsertErr.message)
+
+  // 2. Fallback: explicit check for existing target row
+  const { data: existing } = await supabase
+    .from('reporting_targets')
+    .select('id')
+    .eq('company_id', input.companyId)
+    .eq('month', Number(input.month))
+    .eq('year', Number(input.year))
+    .maybeSingle()
+
+  let finalError: string | null = null
+
+  if (existing) {
+    const { error: updateErr } = await supabase
+      .from('reporting_targets')
+      .update({
+        target_revenue: payload.target_revenue,
+        target_mrr: payload.target_mrr,
+        key_milestones: payload.key_milestones,
+        created_by: claims.email,
+      })
+      .eq('id', existing.id)
+
+    if (updateErr) finalError = updateErr.message
+  } else {
+    const { error: insertErr } = await supabase
+      .from('reporting_targets')
+      .insert(payload)
+
+    if (insertErr) finalError = insertErr.message
+  }
+
+  if (finalError) {
+    console.error('[upsertTarget.action] fallback error:', finalError)
+    return { success: false, error: finalError }
   }
 
   revalidatePath(`/companies/${input.companyId}`)

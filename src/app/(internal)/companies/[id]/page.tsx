@@ -16,6 +16,15 @@ interface CompanyPageProps {
   params: Promise<{ id: string }>
 }
 
+export async function generateMetadata({ params }: CompanyPageProps) {
+  const resolvedParams = await params
+  const company = await getCompanyProfile(resolvedParams.id)
+  return {
+    title: company?.name ? `${company.name} — Portfolio Asset` : 'Company Asset Profile',
+    description: company ? `View portfolio metrics, cap table, exposure, and updates for ${company.name}.` : undefined,
+  }
+}
+
 export default async function CompanyPage({ params }: CompanyPageProps) {
   const resolvedParams = await params
 

@@ -7,6 +7,16 @@ interface AngelCompanyPageProps {
   params: Promise<{ companyId: string }>
 }
 
+export async function generateMetadata({ params }: AngelCompanyPageProps) {
+  const { companyId } = await params
+  const claims = await getClaims()
+  if (!claims) return { title: 'Investment Detail' }
+  const detail = await getAngelCompanyDetail(claims.userId, companyId)
+  return {
+    title: detail?.company_name ? `${detail.company_name} — Investment Detail` : 'Investment Detail',
+  }
+}
+
 export default async function AngelCompanyPage({ params }: AngelCompanyPageProps) {
   const { companyId } = await params
   const claims = await getClaims()
