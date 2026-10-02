@@ -8,6 +8,14 @@ import type {
   MonthlyValuePoint,
 } from '../types'
 
+// Formats a Date object to YYYY-MM-DD using local time
+function formatLocalDateStr(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 // Derives a Supabase Storage public URL for a company logo path.
 function deriveLogoUrl(
   supabase: Awaited<ReturnType<typeof createServerClient>>,
@@ -39,14 +47,6 @@ function reconstructEffectiveStatus(
   return currentStatus
 }
 
-// Helper to safely format local date as YYYY-MM-DD without UTC timezone rollback
-function formatLocalDateStr(d: Date): string {
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 // Generates cutoff dates for the current date/month + the 3 preceding month-ends
 function getPastMonthCutoffs(asOfDateStr?: string, monthsCount = 4) {
   const baseDate = asOfDateStr ? new Date(asOfDateStr + 'T23:59:59') : new Date()
@@ -57,17 +57,14 @@ function getPastMonthCutoffs(asOfDateStr?: string, monthsCount = 4) {
 
   for (let i = 0; i < monthsCount; i++) {
     let d: Date
-    let cutoffDateStr: string
-
     if (i === 0) {
       d = baseDate
-      cutoffDateStr = asOfDateStr || formatLocalDateStr(baseDate)
     } else {
       d = new Date(currentYear, currentMonth - i + 1, 0, 23, 59, 59)
-      cutoffDateStr = formatLocalDateStr(d)
     }
 
     const monthLabel = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const cutoffDateStr = formatLocalDateStr(d)
     results.push({ label: monthLabel, cutoffDateStr, cutoffDate: d })
   }
 
@@ -105,6 +102,7 @@ export async function getHolderSnapshot(
       id,
       holder_id,
       exposure_type,
+      amount_invested,
       ownership_pct,
       status,
       issue_date,
@@ -142,7 +140,12 @@ export async function getHolderSnapshot(
 
     // Sum all events on or before the cutoff date
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
-    const amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+    // Fallback: If exposure_events has no rows/events for this position, fall back to amount_invested on exposure_positions
+    if (amountInvested <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
+      amountInvested = Number(row.amount_invested)
+    }
 
     const effectiveStatus = asOfDate
       ? reconstructEffectiveStatus(row.status ?? '', events, cutoff)
@@ -196,7 +199,11 @@ export async function getHolderSnapshot(
 
       const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
       const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
-      const amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+      if (amt <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
+        amt = Number(row.amount_invested)
+      }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
       const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : null
@@ -251,6 +258,7 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
       id,
       holder_id,
       exposure_type,
+      amount_invested,
       ownership_pct,
       status,
       issue_date,
@@ -295,7 +303,11 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
 
     const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
     const relevantEvents = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= cutoff)
-    const amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    let amountInvested = relevantEvents.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+    if (amountInvested <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
+      amountInvested = Number(row.amount_invested)
+    }
 
     // Reconstruct status
     const effectiveStatus = asOfDate
@@ -362,7 +374,11 @@ export async function getPortfolioShowcase(asOfDate?: string): Promise<Portfolio
 
       const events = (row.exposure_events as { amount: number; event_type: string; effective_date: string }[]) ?? []
       const rel = events.filter((e) => !e.effective_date || new Date(e.effective_date) <= c.cutoffDate)
-      const amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+      let amt = rel.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+      if (amt <= 0 && row.amount_invested != null && Number(row.amount_invested) > 0) {
+        amt = Number(row.amount_invested)
+      }
 
       const status = reconstructEffectiveStatus(row.status ?? '', events, c.cutoffDate)
       const ownershipPct = row.ownership_pct != null ? Number(row.ownership_pct) : 0

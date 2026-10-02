@@ -257,6 +257,8 @@ export async function getCompanyProfile(id: string): Promise<CompanyProfile | nu
   ): Promise<{ success: boolean; error?: string }> {
     const supabase = await createServerClient()
   
+    const todayDate = new Date().toISOString().split('T')[0]
+
     const { error } = await supabase
       .from('companies')
       .update({
@@ -264,6 +266,8 @@ export async function getCompanyProfile(id: string): Promise<CompanyProfile | nu
         health_notes: payload.health_notes,
         health_reviewed_at: new Date().toISOString(),
         health_reviewed_by: userId,
+        last_verified_date: todayDate,
+        verified_by: userId,
       })
       .eq('id', companyId)
   

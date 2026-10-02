@@ -12,6 +12,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import HealthEditForm from '@/features/companies/components/HealthEditForm'
+import { VerifyCompanyButton } from '@/features/companies/components/VerifyCompanyButton'
 import type { CompanyProfile } from '@/features/companies/types'
 import { CompanyIdentityEditForm } from '@/features/companies/components/CompanyIdentityEditForm'
 import { getCompanyLogoUrl } from '@/features/companies/services/logo'
@@ -189,13 +190,20 @@ export default function CompanyOverviewTab({ company, stalenessDays = 90 }: Comp
               <Field label="Verified by"    value={company.verified_by?.split('@')[0] ?? null} />
             </div>
 
-            {stale && (
-              <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
-                <span className="text-amber-500 text-xs mt-0.5 shrink-0">⚠</span>
-                <p className="text-xs text-amber-700 leading-relaxed">
-                  Verification overdue — not confirmed in over {stalenessDays} days.
-                  Review before updating health status.
-                </p>
+            {stale ? (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
+                  <span className="text-amber-500 text-xs mt-0.5 shrink-0">⚠</span>
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    Verification overdue — not confirmed in over {stalenessDays} days.
+                    Review before updating health status.
+                  </p>
+                </div>
+                <VerifyCompanyButton companyId={company.id} />
+              </div>
+            ) : (
+              <div className="pt-1">
+                <VerifyCompanyButton companyId={company.id} />
               </div>
             )}
           </div>
