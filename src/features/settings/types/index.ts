@@ -59,3 +59,27 @@ export interface AppSetting {
     success: boolean
     error?: string
   }
+
+  // ── Angel holdings management ──────────────────────────────────
+  export interface AngelHolding {
+    id: string              // angel_exposures.id
+    exposure_id: string     // exposure_positions.id
+    company_id: string
+    company_name: string
+    logo_path: string | null
+    instrument_name: string | null
+    exposure_type: string
+    amount_invested: number
+    ownership_pct: number | null
+    status: string
+    issue_date: string | null
+  }
+
+  export interface AvailableExposure {
+    id: string              // exposure_positions.id
+    company_id: string
+    company_name: string
+    instrument_name: string | null
+    exposure_type: string
+    amount_invested: number
+  }

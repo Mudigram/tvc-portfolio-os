@@ -122,7 +122,7 @@ function isRoutePermitted(pathname: string, role: UserRole): boolean {
     '/exit-readiness',
   ]
 
-  const angelRoutes = ['/portfolio']
+  const angelRoutes = ['/portfolio', '/profile']
 
   const founderRoutes = [
     '/founder-dashboard',

@@ -7,6 +7,9 @@ export interface AngelPosition {
   exposure_type: string
   instrument_name: string | null
   amount_invested: number | null
+  current_value: number | null
+  unrealized_gain: number | null
+  moic: number | null
   ownership_pct: number | null
   issue_date: string | null
   status: string
@@ -18,6 +21,7 @@ export interface AngelCompanySummary {
   company_name: string
   sector: string | null
   stage: string | null
+  logo_path: string | null
   portfolio_health: HealthStatus | null
   health_reviewed_at: string | null
   is_actively_raising: boolean
@@ -29,7 +33,11 @@ export interface AngelCompanySummary {
 // Personal portfolio stats shown in the summary bar
 export interface AngelPortfolioSummary {
   total_invested: number
+  total_current_value: number
+  total_unrealized_gain: number
+  overall_moic: number | null
   companies_count: number
+  sectors_count: number
   instruments_count: number
   green_count: number
   amber_count: number
@@ -61,6 +69,7 @@ export interface AngelCompanyDetail {
     sector: string | null
     stage: string | null
     country: string | null
+    logo_path: string | null
     portfolio_health: HealthStatus | null
     health_reviewed_at: string | null
     is_actively_raising: boolean
@@ -70,10 +79,48 @@ export interface AngelCompanyDetail {
     blended: {
       total_invested: number
       total_ownership_pct: number
+      total_current_value: number
+      total_unrealized_gain: number
+      overall_moic: number | null
     }
     health_history: {
       health_status: HealthStatus
       previous_status: HealthStatus | null
       reviewed_at: string
     }[]
+    monthly_update_items?: {
+      id: string
+      month: number | null
+      year: number | null
+      status: string
+      submitted_at: string | null
+      achievements: string | null
+      challenges: string | null
+      targets: string | null
+    }[]
   }
+
+// Angel user profile and holder account overview
+export interface AngelProfileData {
+  user: {
+    id: string
+    email: string
+    role: string
+    created_at: string
+    last_sign_in_at: string | null
+  }
+  holder: {
+    id: string
+    name: string
+    holder_type: string
+    email: string | null
+    is_tvclabs_entity: boolean
+  } | null
+  portfolio_overview: {
+    total_invested: number
+    companies_count: number
+    instruments_count: number
+    sectors: string[]
+    instruments: string[]
+  }
+}

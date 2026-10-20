@@ -203,92 +203,96 @@ export default function PositionStatementCard({ data, onResetDate }: Props) {
             )}
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200">
-                <th className="text-left py-3 pr-4 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Company
-                </th>
-                <th className="text-left py-3 pr-4 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Instrument
-                </th>
-                <th className="text-right py-3 pr-4 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Amount Invested
-                </th>
-                <th className="text-right py-3 pr-4 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Ownership
-                </th>
-                <th className="text-center py-3 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                  Health
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {data.positions.map((pos) => (
-                <tr key={pos.position_id} className="group hover:bg-zinc-50/60 transition-colors">
-                  {/* Company */}
-                  <td className="py-3.5 pr-4">
-                    <div className="flex items-center gap-2.5">
-                      <CompanyLogo logoUrl={pos.logo_url} name={pos.company_name} />
-                      <div>
-                        <p className="text-sm font-semibold text-zinc-900">
-                          {pos.company_name}
-                        </p>
-                        {(pos.company_sector || pos.company_stage) && (
-                          <p className="text-[10px] text-zinc-400">
-                            {[pos.company_sector, pos.company_stage].filter(Boolean).join(' · ')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
+          <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-100 bg-zinc-50/70">
+                    <th className="text-left py-3.5 pl-5 pr-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Company
+                    </th>
+                    <th className="text-left py-3.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Instrument
+                    </th>
+                    <th className="text-right py-3.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Amount Invested
+                    </th>
+                    <th className="text-right py-3.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Ownership
+                    </th>
+                    <th className="text-center py-3.5 pr-5 pl-4 text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                      Health
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {data.positions.map((pos) => (
+                    <tr key={pos.position_id} className="group hover:bg-zinc-50/60 transition-colors">
+                      {/* Company */}
+                      <td className="py-3.5 pl-5 pr-4">
+                        <div className="flex items-center gap-3">
+                          <CompanyLogo logoUrl={pos.logo_url} name={pos.company_name} />
+                          <div>
+                            <p className="text-sm font-semibold text-zinc-900 group-hover:text-primary transition-colors">
+                              {pos.company_name}
+                            </p>
+                            {(pos.company_sector || pos.company_stage) && (
+                              <p className="text-[11px] text-zinc-400">
+                                {[pos.company_sector, pos.company_stage].filter(Boolean).join(' · ')}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                  {/* Instrument */}
-                  <td className="py-3.5 pr-4">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-700 border border-zinc-200/80">
-                      {pos.exposure_type}
-                    </span>
-                  </td>
+                      {/* Instrument */}
+                      <td className="py-3.5 px-4">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-700 border border-zinc-200/80">
+                          {pos.exposure_type}
+                        </span>
+                      </td>
 
-                  {/* Amount */}
-                  <td className="py-3.5 pr-4 text-right">
-                    <span className="font-mono text-sm font-semibold text-zinc-900">
-                      {formatCurrency(pos.amount_invested)}
-                    </span>
-                  </td>
+                      {/* Amount */}
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="font-mono text-sm font-semibold text-zinc-900 tabular-nums">
+                          {formatCurrency(pos.amount_invested)}
+                        </span>
+                      </td>
 
-                  {/* Ownership */}
-                  <td className="py-3.5 pr-4 text-right">
-                    <span className="font-mono text-sm text-zinc-600">
-                      {formatPct(pos.ownership_pct)}
-                    </span>
-                  </td>
+                      {/* Ownership */}
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="font-mono text-sm text-zinc-700 tabular-nums">
+                          {formatPct(pos.ownership_pct)}
+                        </span>
+                      </td>
 
-                  {/* Health */}
-                  <td className="py-3.5 text-center">
-                    <HealthBadge health={pos.portfolio_health} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                      {/* Health */}
+                      <td className="py-3.5 pr-5 pl-4 text-center">
+                        <HealthBadge health={pos.portfolio_health} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
 
-            {/* Total row */}
-            <tfoot>
-              <tr className="border-t-2 border-zinc-200">
-                <td colSpan={2} className="pt-4 pb-2 pr-4">
-                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                    Total Position Value
-                  </span>
-                </td>
-                <td className="pt-4 pb-2 pr-4 text-right">
-                  <span className="font-mono text-base font-bold text-zinc-900">
-                    {formatCurrency(data.total_invested)}
-                  </span>
-                </td>
-                <td colSpan={2} />
-              </tr>
-            </tfoot>
-          </table>
+                {/* Total row */}
+                <tfoot>
+                  <tr className="border-t-2 border-zinc-200 bg-zinc-50/50">
+                    <td colSpan={2} className="py-4 pl-5 pr-4">
+                      <span className="text-xs font-bold uppercase tracking-wider text-zinc-600">
+                        Total Position Value
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <span className="font-mono text-base font-bold text-zinc-900 tabular-nums">
+                        {formatCurrency(data.total_invested)}
+                      </span>
+                    </td>
+                    <td colSpan={2} />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 

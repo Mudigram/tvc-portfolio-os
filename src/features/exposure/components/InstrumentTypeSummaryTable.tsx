@@ -25,44 +25,46 @@ function formatCurrency(n: number): string {
 
 export function InstrumentTypeSummaryTable({ data }: InstrumentTypeSummaryTableProps) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-zinc-100">
-            {['Instrument', 'Total invested', 'Companies', 'Instruments'].map((col) => (
-              <th
-                key={col}
-                className="pb-3 pr-8 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide whitespace-nowrap"
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-zinc-50">
-          {data.map((row) => (
-            <tr key={row.exposure_type}>
-              <td className="py-3 pr-8">
-                <span className={`
-                  inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium
-                  ${INSTRUMENT_COLOURS[row.exposure_type] ?? 'text-zinc-500 bg-zinc-50 border-zinc-200'}
-                `}>
-                  {row.exposure_type}
-                </span>
-              </td>
-              <td className="py-3 pr-8 text-zinc-900 tabular-nums font-medium">
-                {formatCurrency(row.total_invested)}
-              </td>
-              <td className="py-3 pr-8 text-zinc-500 tabular-nums">
-                {row.company_count}
-              </td>
-              <td className="py-3 pr-8 text-zinc-500 tabular-nums">
-                {row.row_count}
-              </td>
+    <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-100 bg-zinc-50/70">
+              {['Instrument', 'Total invested', 'Companies', 'Instruments'].map((col, idx) => (
+                <th
+                  key={col}
+                  className={`py-3.5 pr-6 text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap ${idx === 0 ? 'pl-5' : ''}`}
+                >
+                  {col}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-zinc-100">
+            {data.map((row) => (
+              <tr key={row.exposure_type} className="hover:bg-zinc-50/60 transition-colors">
+                <td className="py-3.5 pl-5 pr-6">
+                  <span className={`
+                    inline-flex items-center px-2 py-0.5 rounded-md border text-[10px] font-semibold tracking-wide uppercase
+                    ${INSTRUMENT_COLOURS[row.exposure_type] ?? 'text-zinc-500 bg-zinc-50 border-zinc-200'}
+                  `}>
+                    {row.exposure_type}
+                  </span>
+                </td>
+                <td className="py-3.5 pr-6 text-zinc-900 tabular-nums font-semibold font-mono text-sm">
+                  {formatCurrency(row.total_invested)}
+                </td>
+                <td className="py-3.5 pr-6 text-zinc-600 tabular-nums font-mono text-xs">
+                  {row.company_count}
+                </td>
+                <td className="py-3.5 pr-6 text-zinc-600 tabular-nums font-mono text-xs">
+                  {row.row_count}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

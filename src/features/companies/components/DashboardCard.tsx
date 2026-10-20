@@ -35,29 +35,38 @@ export default function DashboardCard({ company }: DashboardCardProps) {
 
   const healthLabel = company.portfolio_health && HEALTH_LABEL[company.portfolio_health]
     ? HEALTH_LABEL[company.portfolio_health]
-    : 'Not set'
+    : 'Unset'
+
+  const dotColor = company.portfolio_health === 'Green'
+    ? 'bg-emerald-500'
+    : company.portfolio_health === 'Amber'
+    ? 'bg-amber-500'
+    : company.portfolio_health === 'Red'
+    ? 'bg-red-500'
+    : 'bg-zinc-400'
 
   return (
     <Link
       href={`/companies/${company.id}`}
-      className="block rounded-xl border border-zinc-100 bg-white p-5 shadow-lg hover:shadow-md transition-all"
+      className="group block rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_1px_3px_0_rgba(15,23,42,0.04),0_6px_16px_-4px_rgba(15,23,42,0.02)] hover:border-zinc-300 hover:shadow-[0_4px_12px_-2px_rgba(15,23,42,0.06),0_12px_24px_-4px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5"
     >
       {/* Top row — name + health badge */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-zinc-900 truncate">
+          <p className="text-sm font-semibold text-zinc-900 group-hover:text-primary transition-colors truncate">
             {company.name}
           </p>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-400 mt-0.5 truncate">
             {[company.stage, company.sector].filter(Boolean).join(' · ') || '—'}
           </p>
         </div>
         <span
           className={`
-            shrink-0 inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium
+            shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[11px] font-semibold
             ${healthStyle}
           `}
         >
+          <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
           {healthLabel}
         </span>
       </div>

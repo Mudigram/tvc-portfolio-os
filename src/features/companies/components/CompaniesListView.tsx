@@ -164,24 +164,25 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-200">
-                {['Company Asset', 'Sector', 'Current Stage', 'Health Profile', 'Cycle Compliance', 'Funding Status', 'Exit Signal'].map((col, idx) => (
-                  <th
-                    key={col}
-                    className={`pb-3 text-[11px] font-bold text-zinc-400 uppercase tracking-wider whitespace-nowrap ${idx === 0 ? 'pl-4' : 'px-4'}`}
-                  >
-                    {col}
+        <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-100 bg-zinc-50/70">
+                  {['Company Asset', 'Sector', 'Current Stage', 'Health Profile', 'Cycle Compliance', 'Funding Status', 'Exit Signal'].map((col, idx) => (
+                    <th
+                      key={col}
+                      className={`py-3.5 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap ${idx === 0 ? 'pl-5' : 'px-4'}`}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                  <th className="py-3.5 pr-5 text-right text-[11px] font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
+                    Action
                   </th>
-                ))}
-                <th className="pb-3 pr-4 text-right text-[11px] font-bold text-zinc-400 uppercase tracking-wider whitespace-nowrap">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100">
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
               {paginated.map((company) => (
                 <tr key={company.id} className="group hover:bg-zinc-50/40 transition-colors relative">
 
@@ -261,6 +262,7 @@ export function CompaniesListView({ companies }: CompaniesListViewProps) {
             </tbody>
           </table>
         </div>
+      </div>
       )}
 
       {/* ── Pagination bar ─────────────────────────────────── */}

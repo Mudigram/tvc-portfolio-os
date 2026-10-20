@@ -1,4 +1,5 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/service'
 import type {
   AngelCompanySummary,
   AngelPortfolioSummary,
@@ -7,7 +8,17 @@ import type {
   AngelPosition,
   HealthStatus,
   ExitSignal,
+  AngelProfileData,
 } from '@/features/angel-portfolio/types'
+
+// Helper to get Supabase client (service role bypasses RLS so exposure_events are never hidden)
+async function getSupabaseClient() {
+  try {
+    return createServiceRoleClient()
+  } catch {
+    return await createServerClient()
+  }
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -36,7 +47,7 @@ export async function getAngelPortfolio(userId: string): Promise<{
   companies: AngelCompanySummary[]
   summary: AngelPortfolioSummary
 }> {
-  const supabase = await createServerClient()
+  const supabase = await getSupabaseClient()
 
   const { data, error } = await supabase
     .from('angel_exposures')
@@ -58,6 +69,7 @@ export async function getAngelPortfolio(userId: string): Promise<{
           name,
           sector,
           stage,
+          logo_path,
           portfolio_health,
           health_reviewed_at,
           funding_status (
@@ -70,6 +82,10 @@ export async function getAngelPortfolio(userId: string): Promise<{
           ),
           exit_readiness (
             overall_readiness
+          ),
+          funding_rounds (
+            post_money_valuation,
+            date_closed
           )
         )
       )
@@ -82,7 +98,11 @@ export async function getAngelPortfolio(userId: string): Promise<{
       companies: [],
       summary: {
         total_invested: 0,
+        total_current_value: 0,
+        total_unrealized_gain: 0,
+        overall_moic: null,
         companies_count: 0,
+        sectors_count: 0,
         instruments_count: 0,
         green_count: 0,
         amber_count: 0,
@@ -133,20 +153,44 @@ export async function getAngelPortfolio(userId: string): Promise<{
       (u) => u.status === 'Submitted' && isCurrentCycle(u.submitted_at)
     )
 
+    // Latest funding round valuation (Mark-to-market multiple)
+    const rounds = (company.funding_rounds ?? []) as {
+      post_money_valuation: number | null
+      date_closed: string | null
+    }[]
+    const latestRound = rounds
+      .filter((r) => r.post_money_valuation !== null && Number(r.post_money_valuation) > 0)
+      .sort((a, b) => (b.date_closed || '').localeCompare(a.date_closed || ''))
+      .at(0)
+
+    const latestPostVal = latestRound?.post_money_valuation
+      ? Number(latestRound.post_money_valuation)
+      : null
+
+    // Determine current marked-to-market value
+    let currentValue = amountInvested
+    if (exposure.ownership_pct !== null && Number(exposure.ownership_pct) > 0 && latestPostVal !== null) {
+      currentValue = latestPostVal * (Number(exposure.ownership_pct) / 100)
+    }
+
+    const unrealizedGain = currentValue - amountInvested
+    const moic = amountInvested > 0 ? Number((currentValue / amountInvested).toFixed(2)) : null
+
     // ─── Exit readiness signal ───────────────────────────────────────────────
-    // 🟢 Fix: Cast directly as an object or null since Supabase returns it as an object
-    const exitData = company.exit_readiness as {
-        overall_readiness: string | null
-      } | null
-  
-      // Read the parameter directly off the object using safe optional chaining
-      const exitSignal = mapExitSignal(exitData?.overall_readiness ?? null)
+    const rawExit = company.exit_readiness as unknown
+    const exitObj = Array.isArray(rawExit)
+      ? (rawExit[0] as { overall_readiness?: string | null } | undefined)
+      : (rawExit as { overall_readiness?: string | null } | null)
+    const exitSignal = mapExitSignal(exitObj?.overall_readiness ?? null)
 
     const position: AngelPosition = {
       exposure_id: exposure.id,
       exposure_type: exposure.exposure_type,
       instrument_name: exposure.instrument_name ?? null,
       amount_invested: exposure.amount_invested ?? null,
+      current_value: currentValue,
+      unrealized_gain: unrealizedGain,
+      moic: moic,
       ownership_pct: exposure.ownership_pct ?? null,
       issue_date: exposure.issue_date ?? null,
       status: exposure.status,
@@ -162,12 +206,23 @@ export async function getAngelPortfolio(userId: string): Promise<{
       existing.position.ownership_pct =
         (existing.position.ownership_pct ?? 0) +
         (position.ownership_pct ?? 0)
+      existing.position.current_value =
+        (existing.position.current_value ?? 0) +
+        (position.current_value ?? 0)
+      existing.position.unrealized_gain =
+        (existing.position.unrealized_gain ?? 0) +
+        (position.unrealized_gain ?? 0)
+
+      const totalInv = existing.position.amount_invested ?? 0
+      const totalVal = existing.position.current_value ?? 0
+      existing.position.moic = totalInv > 0 ? Number((totalVal / totalInv).toFixed(2)) : null
     } else {
       companyMap.set(company.id, {
         company_id: company.id,
         company_name: company.name,
         sector: company.sector ?? null,
         stage: company.stage ?? null,
+        logo_path: (company as { logo_path?: string | null }).logo_path ?? null,
         portfolio_health: (company.portfolio_health as HealthStatus) ?? null,
         health_reviewed_at: company.health_reviewed_at ?? null,
         is_actively_raising: latestFunding?.is_actively_raising ?? false,
@@ -181,11 +236,23 @@ export async function getAngelPortfolio(userId: string): Promise<{
   const companies = Array.from(companyMap.values())
 
   // Summary stats
+  const uniqueSectors = new Set(companies.map((c) => c.sector).filter(Boolean))
+  const totalInvested = companies.reduce(
+    (sum, c) => sum + (c.position.amount_invested ?? 0), 0
+  )
+  const totalCurrentValue = companies.reduce(
+    (sum, c) => sum + (c.position.current_value ?? 0), 0
+  )
+  const totalUnrealizedGain = totalCurrentValue - totalInvested
+  const overallMoic = totalInvested > 0 ? Number((totalCurrentValue / totalInvested).toFixed(2)) : null
+
   const summary: AngelPortfolioSummary = {
-    total_invested: companies.reduce(
-      (sum, c) => sum + (c.position.amount_invested ?? 0), 0
-    ),
+    total_invested: totalInvested,
+    total_current_value: totalCurrentValue,
+    total_unrealized_gain: totalUnrealizedGain,
+    overall_moic: overallMoic,
     companies_count: companies.length,
+    sectors_count: uniqueSectors.size,
     instruments_count: rows.length,
     green_count: companies.filter((c) => c.portfolio_health === 'Green').length,
     amber_count: companies.filter((c) => c.portfolio_health === 'Amber').length,
@@ -213,7 +280,7 @@ export async function getAngelPortfolio(userId: string): Promise<{
 export async function getAngelActivityFeed(
   userId: string
 ): Promise<AngelActivityEvent[]> {
-  const supabase = await createServerClient()
+  const supabase = await getSupabaseClient()
 
   const ninetyDaysAgo = new Date(
     Date.now() - 90 * 24 * 60 * 60 * 1000
@@ -348,7 +415,7 @@ export async function getAngelCompanyDetail(
     userId: string,
     companyId: string
   ): Promise<AngelCompanyDetail | null> {
-    const supabase = await createServerClient()
+    const supabase = await getSupabaseClient()
   
     // Get all of this angel's exposure rows, with company joined
     const { data: exposureData, error: exposureError } = await supabase
@@ -398,6 +465,7 @@ export async function getAngelCompanyDetail(
         sector,
         stage,
         country,
+        logo_path,
         portfolio_health,
         health_reviewed_at,
         funding_status (
@@ -405,11 +473,21 @@ export async function getAngelCompanyDetail(
           created_at
         ),
         monthly_updates (
+          id,
+          month,
+          year,
+          status,
           submitted_at,
-          status
+          achievements,
+          challenges,
+          targets
         ),
         exit_readiness (
           overall_readiness
+        ),
+        funding_rounds (
+          post_money_valuation,
+          date_closed
         )
       `)
       .eq('id', companyId)
@@ -434,46 +512,102 @@ export async function getAngelCompanyDetail(
       .at(0)
   
     const updates = (company.monthly_updates ?? []) as {
-      submitted_at: string
+      id: string
+      month: number | null
+      year: number | null
+      submitted_at: string | null
       status: string
+      achievements: string | null
+      challenges: string | null
+      targets: string | null
     }[]
     const submittedThisCycle = updates.some(
       (u) => u.status === 'Submitted' && isCurrentCycle(u.submitted_at)
     )
-  
+
+    // Latest funding round valuation
+    const rounds = (company.funding_rounds ?? []) as {
+      post_money_valuation: number | null
+      date_closed: string | null
+    }[]
+    const latestRound = rounds
+      .filter((r) => r.post_money_valuation !== null && Number(r.post_money_valuation) > 0)
+      .sort((a, b) => (b.date_closed || '').localeCompare(a.date_closed || ''))
+      .at(0)
+    const latestPostVal = latestRound?.post_money_valuation
+      ? Number(latestRound.post_money_valuation)
+      : null
+
     // Build the positions array — every exposure this angel holds in this company
-    const positions: AngelPosition[] = companyExposures.map((exp) => ({
-      exposure_id: exp.id,
-      exposure_type: exp.exposure_type,
-      instrument_name: exp.instrument_name ?? null,
-      amount_invested: exp.amount_invested ?? null,
-      ownership_pct: exp.ownership_pct ?? null,
-      issue_date: exp.issue_date ?? null,
-      status: exp.status,
-    }))
-  
+    const positions: AngelPosition[] = companyExposures.map((exp) => {
+      const amountInvested = exp.amount_invested ?? null
+      let currentValue = amountInvested
+      if (exp.ownership_pct !== null && Number(exp.ownership_pct) > 0 && latestPostVal !== null) {
+        currentValue = latestPostVal * (Number(exp.ownership_pct) / 100)
+      }
+      const unrealizedGain = (currentValue !== null && amountInvested !== null)
+        ? currentValue - amountInvested
+        : null
+      const moic = (amountInvested !== null && amountInvested > 0 && currentValue !== null)
+        ? Number((currentValue / amountInvested).toFixed(2))
+        : null
+
+      return {
+        exposure_id: exp.id,
+        exposure_type: exp.exposure_type,
+        instrument_name: exp.instrument_name ?? null,
+        amount_invested: amountInvested,
+        current_value: currentValue,
+        unrealized_gain: unrealizedGain,
+        moic: moic,
+        ownership_pct: exp.ownership_pct ?? null,
+        issue_date: exp.issue_date ?? null,
+        status: exp.status,
+      }
+    })
+
+    const totalInvested = positions.reduce(
+      (sum, p) => sum + (p.amount_invested ?? 0), 0
+    )
+    const totalCurrentValue = positions.reduce(
+      (sum, p) => sum + (p.current_value ?? 0), 0
+    )
+    const totalUnrealizedGain = totalCurrentValue - totalInvested
+    const overallMoic = totalInvested > 0 ? Number((totalCurrentValue / totalInvested).toFixed(2)) : null
+
     const blended = {
-      total_invested: positions.reduce(
-        (sum, p) => sum + (p.amount_invested ?? 0), 0
-      ),
+      total_invested: totalInvested,
       total_ownership_pct: positions.reduce(
         (sum, p) => sum + (p.ownership_pct ?? 0), 0
       ),
+      total_current_value: totalCurrentValue,
+      total_unrealized_gain: totalUnrealizedGain,
+      overall_moic: overallMoic,
     }
-  
+
+    // Sort updates by year desc, month desc
+    const sortedUpdates = [...updates].sort((a, b) => {
+      const dateA = a.submitted_at ? new Date(a.submitted_at).getTime() : 0
+      const dateB = b.submitted_at ? new Date(b.submitted_at).getTime() : 0
+      return dateB - dateA
+    })
+
     return {
       company_id: company.id,
       company_name: company.name,
       sector: company.sector ?? null,
       stage: company.stage ?? null,
       country: company.country ?? null,
+      logo_path: (company as { logo_path?: string | null }).logo_path ?? null,
       portfolio_health: (company.portfolio_health as HealthStatus) ?? null,
       health_reviewed_at: company.health_reviewed_at ?? null,
       is_actively_raising: latestFunding?.is_actively_raising ?? false,
       update_submitted_this_cycle: submittedThisCycle,
-    exit_readiness_signal: mapExitSignal(
-      ((company.exit_readiness as unknown) as { overall_readiness: string | null })?.overall_readiness ?? null
-    ),
+      exit_readiness_signal: mapExitSignal(
+        Array.isArray(company.exit_readiness)
+          ? (company.exit_readiness[0] as { overall_readiness?: string | null } | undefined)?.overall_readiness ?? null
+          : (company.exit_readiness as { overall_readiness?: string | null } | null)?.overall_readiness ?? null
+      ),
       positions,
       blended,
       health_history: (historyData ?? []).map((h) => ({
@@ -481,5 +615,80 @@ export async function getAngelCompanyDetail(
         previous_status: (h.previous_status as HealthStatus) ?? null,
         reviewed_at: h.reviewed_at,
       })),
+      monthly_update_items: sortedUpdates,
     }
   }
+
+// ─── Angel Profile & Holder Account ──────────────────────────────────────────
+
+/**
+ * Returns account details and portfolio summary for the logged-in angel.
+ */
+export async function getAngelProfile(
+  userId: string,
+  userEmail: string
+): Promise<AngelProfileData> {
+  const supabase = await getSupabaseClient()
+
+  // 1. Fetch holder record linked to this user_id or email
+  const { data: holderRows } = await supabase
+    .from('holders')
+    .select('id, name, holder_type, email, is_tvclabs_entity')
+    .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+    .limit(1)
+
+  const holder = holderRows?.[0] ?? null
+
+  // 2. Fetch angel user auth metadata via admin client
+  let createdAt = new Date().toISOString()
+  let lastSignInAt: string | null = null
+
+  try {
+    const serviceClient = createServiceRoleClient()
+    const { data: userData } = await serviceClient.auth.admin.getUserById(userId)
+    if (userData?.user) {
+      createdAt = userData.user.created_at
+      lastSignInAt = userData.user.last_sign_in_at ?? null
+    }
+  } catch (err) {
+    console.error('[getAngelProfile] Error fetching user auth data:', err)
+  }
+
+  // 3. Fetch portfolio stats for overview
+  const { companies, summary } = await getAngelPortfolio(userId)
+
+  const sectors = Array.from(new Set(companies.map((c) => c.sector).filter(Boolean))) as string[]
+  const instruments = Array.from(
+    new Set(
+      companies
+        .map((c) => c.position.instrument_name ?? c.position.exposure_type)
+        .filter(Boolean)
+    )
+  ) as string[]
+
+  return {
+    user: {
+      id: userId,
+      email: userEmail,
+      role: 'Angel Investor',
+      created_at: createdAt,
+      last_sign_in_at: lastSignInAt,
+    },
+    holder: holder
+      ? {
+          id: holder.id,
+          name: holder.name,
+          holder_type: holder.holder_type,
+          email: holder.email,
+          is_tvclabs_entity: holder.is_tvclabs_entity ?? false,
+        }
+      : null,
+    portfolio_overview: {
+      total_invested: summary.total_invested,
+      companies_count: summary.companies_count,
+      instruments_count: summary.instruments_count,
+      sectors,
+      instruments,
+    },
+  }
+}

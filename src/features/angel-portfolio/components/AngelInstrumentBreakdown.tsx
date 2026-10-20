@@ -4,6 +4,8 @@ interface AngelInstrumentBreakdownProps {
   positions: AngelPosition[]
   blendedInvested: number
   blendedOwnership: number
+  blendedCurrentValue?: number
+  blendedMoic?: number | null
 }
 
 function formatCurrency(n: number | null): string {
@@ -30,6 +32,8 @@ export function AngelInstrumentBreakdown({
   positions,
   blendedInvested,
   blendedOwnership,
+  blendedCurrentValue,
+  blendedMoic,
 }: AngelInstrumentBreakdownProps) {
   // Single instrument — no breakdown needed, render nothing here
   // (the card already shows the single position inline)
@@ -43,7 +47,9 @@ export function AngelInstrumentBreakdown({
             <th className="text-left font-medium pb-1.5">Round</th>
             <th className="text-left font-medium pb-1.5">Instrument</th>
             <th className="text-right font-medium pb-1.5">Invested</th>
+            <th className="text-right font-medium pb-1.5">Est. Value</th>
             <th className="text-right font-medium pb-1.5">Ownership</th>
+            <th className="text-right font-medium pb-1.5">Return</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-50">
@@ -56,8 +62,26 @@ export function AngelInstrumentBreakdown({
               <td className="py-1.5 text-right text-zinc-900 tabular-nums">
                 {formatCurrency(p.amount_invested)}
               </td>
+              <td className="py-1.5 text-right text-zinc-900 tabular-nums font-medium">
+                {formatCurrency(p.current_value ?? p.amount_invested)}
+              </td>
               <td className="py-1.5 text-right text-zinc-700 tabular-nums">
                 {formatPct(p.ownership_pct)}
+              </td>
+              <td className="py-1.5 text-right tabular-nums">
+                {p.moic !== null && p.moic !== undefined ? (
+                  <span className={`inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold ${
+                    p.moic > 1.05
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : p.moic < 0.95
+                      ? 'bg-red-50 text-red-700 border border-red-200'
+                      : 'bg-zinc-100 text-zinc-600'
+                  }`}>
+                    {p.moic.toFixed(1)}x
+                  </span>
+                ) : (
+                  '—'
+                )}
               </td>
             </tr>
           ))}
@@ -67,11 +91,17 @@ export function AngelInstrumentBreakdown({
             <td colSpan={2} className="pt-2 text-xs font-medium text-zinc-900">
               Blended total
             </td>
-            <td className="pt-2 text-right text-xs font-medium text-zinc-900 tabular-nums">
+            <td className="pt-2 text-right text-xs font-semibold text-zinc-900 tabular-nums">
               {formatCurrency(blendedInvested)}
+            </td>
+            <td className="pt-2 text-right text-xs font-semibold text-zinc-900 tabular-nums">
+              {formatCurrency(blendedCurrentValue ?? blendedInvested)}
             </td>
             <td className="pt-2 text-right text-xs font-medium text-zinc-900 tabular-nums">
               {formatPct(blendedOwnership)}
+            </td>
+            <td className="pt-2 text-right text-xs font-semibold tabular-nums">
+              {blendedMoic !== null && blendedMoic !== undefined ? `${blendedMoic.toFixed(1)}x` : '—'}
             </td>
           </tr>
         </tfoot>

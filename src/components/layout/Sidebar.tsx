@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { UserRole } from '@/types/roles'
 import { SignOutButton } from '@/features/auth/components/SignOutButton'
-import { X, LayoutDashboard, Building2, Users2, LineChart, FileCheck, Briefcase, Send, LogOut, Settings, MonitorPlay } from 'lucide-react'
+import { X, LayoutDashboard, Building2, Users2, LineChart, FileCheck, Briefcase, Send, LogOut, Settings, MonitorPlay, User } from 'lucide-react'
 
 interface NavItem {
   label: string
@@ -112,23 +112,43 @@ export default function Sidebar({ role, email, isOpen, isCollapsed, onClose }: S
           })}
         </nav>
 
-        <div className="mb-2 space-y-1.5">
-          <Link
-            href="/settings"
-            onClick={onClose}
-            title={isCollapsed ? 'Settings' : undefined}
-            className={[
-              'flex h-10 items-center rounded-xl border text-xs font-semibold uppercase tracking-widest transition-all duration-200',
-              isCollapsed ? 'justify-center border-transparent px-0' : 'border-transparent px-3',
-              isSettingsActive
-                ? 'border-blue-500/40 bg-blue-500/10 text-white shadow-inner shadow-blue-900/20'
-                : 'text-sidebar-foreground/60 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground',
-            ].join(' ')}
-          >
-            <Settings className={['h-4 w-4 shrink-0', isCollapsed ? 'm-0' : 'mr-3'].join(' ')} />
-            {!isCollapsed && <span>Settings</span>}
-          </Link>
-        </div>
+        {role === 'angel' ? (
+          <div className="mb-2 space-y-1.5">
+            <Link
+              href="/profile"
+              onClick={onClose}
+              title={isCollapsed ? 'Profile' : undefined}
+              className={[
+                'flex h-10 items-center rounded-xl border text-xs font-semibold uppercase tracking-widest transition-all duration-200',
+                isCollapsed ? 'justify-center border-transparent px-0' : 'border-transparent px-3',
+                pathname === '/profile' || pathname.startsWith('/profile/')
+                  ? 'border-blue-500/40 bg-blue-500/10 text-white shadow-inner shadow-blue-900/20'
+                  : 'text-sidebar-foreground/60 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground',
+              ].join(' ')}
+            >
+              <User className={['h-4 w-4 shrink-0', isCollapsed ? 'm-0' : 'mr-3'].join(' ')} />
+              {!isCollapsed && <span>Profile</span>}
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-2 space-y-1.5">
+            <Link
+              href="/settings"
+              onClick={onClose}
+              title={isCollapsed ? 'Settings' : undefined}
+              className={[
+                'flex h-10 items-center rounded-xl border text-xs font-semibold uppercase tracking-widest transition-all duration-200',
+                isCollapsed ? 'justify-center border-transparent px-0' : 'border-transparent px-3',
+                isSettingsActive
+                  ? 'border-blue-500/40 bg-blue-500/10 text-white shadow-inner shadow-blue-900/20'
+                  : 'text-sidebar-foreground/60 hover:border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-foreground',
+              ].join(' ')}
+            >
+              <Settings className={['h-4 w-4 shrink-0', isCollapsed ? 'm-0' : 'mr-3'].join(' ')} />
+              {!isCollapsed && <span>Settings</span>}
+            </Link>
+          </div>
+        )}
 
         <div className="mx-2 border-t border-sidebar-border pt-4" />
 

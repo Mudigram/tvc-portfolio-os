@@ -77,7 +77,7 @@ function CompanyLogo({ logoUrl, name }: { logoUrl: string | null; name: string }
 
 function CompanyCard({ company }: { company: ShowcaseCompanyCard }) {
   return (
-    <div className="p-4 rounded-xl bg-zinc-50/50 border border-zinc-200/80 hover:border-zinc-300 hover:shadow-2xs transition-all">
+    <div className="p-4 rounded-xl bg-white border border-zinc-200/80 shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] hover:shadow-[0_4px_12px_-2px_rgba(15,23,42,0.06)] hover:border-zinc-300 hover:-translate-y-0.5 transition-all duration-200 print:shadow-none print:border print:translate-none">
       {/* Header row */}
       <div className="flex items-start gap-3 mb-3">
         <CompanyLogo logoUrl={company.logo_url} name={company.company_name} />

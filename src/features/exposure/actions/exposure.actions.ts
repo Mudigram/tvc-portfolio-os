@@ -136,6 +136,32 @@ export async function updateExposureRow(
     }
   }
 
+  // Handle angel portal linkage if provided
+  if (formData.has('angel_user_id')) {
+    const angel_user_id = parseNullableString(formData.get('angel_user_id') as string)
+    let serviceClient: any = supabase
+    try {
+      serviceClient = createServiceRoleClient()
+    } catch {
+      serviceClient = supabase
+    }
+    // Remove existing link for this exposure position
+    await serviceClient
+      .from('angel_exposures')
+      .delete()
+      .eq('exposure_id', exposureId)
+
+    if (angel_user_id) {
+      await serviceClient
+        .from('angel_exposures')
+        .insert({
+          user_id: angel_user_id,
+          exposure_id: exposureId,
+        })
+    }
+    revalidatePath('/portfolio')
+  }
+
   revalidatePath(`/companies/${companyId}`)
   revalidatePath('/exposure')
   revalidatePath('/investor-snapshot')
@@ -299,6 +325,26 @@ export async function createExposureRow(
     }
   }
 
+  // Handle angel portal linkage if provided
+  if (formData.has('angel_user_id')) {
+    const angel_user_id = parseNullableString(formData.get('angel_user_id') as string)
+    if (angel_user_id) {
+      let serviceClient: any = supabase
+      try {
+        serviceClient = createServiceRoleClient()
+      } catch {
+        serviceClient = supabase
+      }
+      await serviceClient
+        .from('angel_exposures')
+        .insert({
+          user_id: angel_user_id,
+          exposure_id: newExposure.id,
+        })
+      revalidatePath('/portfolio')
+    }
+  }
+
   revalidatePath(`/companies/${companyId}`)
   revalidatePath('/exposure')
   revalidatePath('/investor-snapshot')
@@ -323,3 +369,25 @@ export async function reconcilePositionAction(
 
   return result
 }
+
+// ── Get currently linked angel user ID for an exposure ─────────
+export async function getExposureAngelLinkAction(
+  exposureId: string,
+): Promise<string | null> {
+  const claims = await getClaims()
+  if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
+    return null
+  }
+  let serviceClient: any = await createServerClient()
+  try {
+    serviceClient = createServiceRoleClient()
+  } catch {}
+
+  const { data } = await serviceClient
+    .from('angel_exposures')
+    .select('user_id')
+    .eq('exposure_id', exposureId)
+    .maybeSingle()
+
+  return data?.user_id ?? null
+}

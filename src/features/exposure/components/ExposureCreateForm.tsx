@@ -3,9 +3,10 @@
 // ExposureCreateForm — "Add exposure" panel
 // ─────────────────────────────────────────────────────────────
 
-import { useState, useTransition } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation' // 👈 1. Import the Next.js router
 import { createExposureRow } from '../actions/exposure.actions'
+import { getRegisteredAngelUsersAction } from '@/features/settings/actions/settings.actions'
 import { HolderPicker } from './HolderPicker'
 import type { HolderOption } from '../services/holders.service'
 import type { ExposureType, ExposureStatus } from '../types'
@@ -72,6 +73,27 @@ export function ExposureCreateForm({
   const router = useRouter() // 👈 2. Initialize the router
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [angelUsers, setAngelUsers] = useState<{ id: string; email: string; name?: string }[]>([])
+  const [selectedAngelId, setSelectedAngelId] = useState<string>('')
+  const [loadingAngels, setLoadingAngels] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    async function loadAngels() {
+      try {
+        const angels = await getRegisteredAngelUsersAction()
+        if (active) setAngelUsers(angels)
+      } catch (err) {
+        console.error('[ExposureCreateForm] error loading angels:', err)
+      } finally {
+        if (active) setLoadingAngels(false)
+      }
+    }
+    loadAngels()
+    return () => {
+      active = false
+    }
+  }, [])
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -189,6 +211,36 @@ export function ExposureCreateForm({
           <Field label="Last verified date">
             <input type="date" name="last_verified_date" className={inputClass} />
           </Field>
+
+          {/* Angel Portal Link */}
+          <div className="col-span-2 sm:col-span-3 lg:col-span-4 pt-3 border-t border-zinc-200/60">
+            <div className="flex flex-col gap-1.5 max-w-md">
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide flex items-center justify-between">
+                <span>Angel Portal Access (Optional)</span>
+                {selectedAngelId && (
+                  <span className="text-[10px] text-blue-600 font-semibold lowercase bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">
+                    linked to portal
+                  </span>
+                )}
+              </label>
+              <FormSelect
+                name="angel_user_id"
+                value={selectedAngelId}
+                onChange={(e) => setSelectedAngelId(e.target.value)}
+                disabled={loadingAngels}
+              >
+                <option value="">None (Internal TVC only)</option>
+                {angelUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name ? `${u.name} (${u.email})` : u.email}
+                  </option>
+                ))}
+              </FormSelect>
+              <p className="text-[11px] text-zinc-400">
+                Grants this angel investor secure access to view and monitor this holding on their personal portal.
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Actions */}

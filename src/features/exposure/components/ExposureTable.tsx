@@ -199,33 +199,34 @@ export default function ExposureTable({
 
       {/* Empty state */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-sm font-medium text-zinc-900">No records</p>
-          <p className="text-sm text-zinc-400 mt-1">
+        <div className="flex flex-col items-center justify-center py-20 text-center rounded-xl border border-zinc-200/80 bg-white">
+          <p className="text-sm font-semibold text-zinc-900">No records</p>
+          <p className="text-xs text-zinc-400 mt-1">
             No exposure entries match this view.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-100">
-                {[
-                  'Holder', 'Type', 'Instrument',
-                  'Issued', 'Invested', 'Ownership',
-                  'Share class', 'Status', 'Verified',
-                  ...(canEdit ? [''] : []),   // Edit column header — internal only
-                ].map((col) => (
-                  <th
-                    key={col}
-                    className="pb-3 pr-6 text-left text-xs font-medium text-zinc-400 uppercase tracking-wide whitespace-nowrap"
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50">
+        <div className="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-100 bg-zinc-50/70">
+                  {[
+                    'Holder', 'Type', 'Instrument',
+                    'Issued', 'Invested', 'Ownership',
+                    'Share class', 'Status', 'Verified',
+                    ...(canEdit ? [''] : []),   // Edit column header — internal only
+                  ].map((col, idx) => (
+                    <th
+                      key={col}
+                      className={`py-3.5 pr-6 text-left text-[11px] font-semibold text-zinc-400 uppercase tracking-wider whitespace-nowrap ${idx === 0 ? 'pl-5' : ''}`}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
               {filtered.map((row) => {
                 const stale = isStale(row.last_verified_date)
                 const isEditing = editingId === row.id
@@ -237,25 +238,25 @@ export default function ExposureTable({
                     {/* ── Data row ─────────────────────────── */}
                     <tr
                       className={`group transition-colors ${
-                        isEditing ? 'bg-zinc-50' : 'hover:bg-zinc-50'
+                        isEditing ? 'bg-zinc-50' : 'hover:bg-zinc-50/60'
                       }`}
                     >
-                      <td className="py-4 pr-6 font-medium text-zinc-900 whitespace-nowrap">
+                      <td className="py-4 pl-5 pr-6 font-semibold text-zinc-900 whitespace-nowrap">
                         {row.holder_name}
                       </td>
-                      <td className="py-4 pr-6 text-zinc-500 whitespace-nowrap">
+                      <td className="py-4 pr-6 text-zinc-500 whitespace-nowrap text-xs">
                         {row.holder_type}
                       </td>
-                      <td className="py-4 pr-6 text-zinc-600 whitespace-nowrap">
+                      <td className="py-4 pr-6 text-zinc-600 whitespace-nowrap text-xs">
                         {row.instrument_name ?? '—'}
                       </td>
-                      <td className="py-4 pr-6 text-zinc-500 whitespace-nowrap">
+                      <td className="py-4 pr-6 text-zinc-500 whitespace-nowrap text-xs font-mono">
                         {formatDate(row.issue_date)}
                       </td>
-                      <td className="py-4 pr-6 text-zinc-900 whitespace-nowrap tabular-nums">
+                      <td className="py-4 pr-6 text-zinc-900 whitespace-nowrap tabular-nums font-semibold font-mono text-sm">
                         {formatCurrency(row.amount_invested)}
                       </td>
-                      <td className="py-4 pr-6 text-zinc-900 whitespace-nowrap tabular-nums">
+                      <td className="py-4 pr-6 text-zinc-900 whitespace-nowrap tabular-nums font-mono text-sm">
                         {formatPct(row.ownership_pct)}
                       </td>
                       <td className="py-4 pr-6 text-zinc-500 whitespace-nowrap">
@@ -326,6 +327,7 @@ export default function ExposureTable({
             </tbody>
           </table>
         </div>
+      </div>
       )}
     </div>
   )

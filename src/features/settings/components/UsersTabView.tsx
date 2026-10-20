@@ -12,6 +12,8 @@ import {
 } from '../actions/settings.actions'
 import type { ManagedUser, UserRole } from '../types'
 import { Button } from '@/components/ui/button'
+import { AngelHoldingsSheet } from './AngelHoldingsSheet'
+import { PieChart } from 'lucide-react'
 
 interface Props {
   users: ManagedUser[]
@@ -123,7 +125,13 @@ function InviteForm() {
 }
 
 // ── User row ──────────────────────────────────────────────────
-function UserRow({ user }: { user: ManagedUser }) {
+function UserRow({
+  user,
+  onManageHoldings,
+}: {
+  user: ManagedUser
+  onManageHoldings: (user: ManagedUser) => void
+}) {
   const [role, setRole] = useState<UserRole | ''>(user.role ?? '')
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
@@ -201,18 +209,30 @@ function UserRow({ user }: { user: ManagedUser }) {
       <td className="px-5 py-4 text-xs text-zinc-400 whitespace-nowrap">
         {formatDate(user.created_at)}
       </td>
-      <td className="px-5 py-4 whitespace-nowrap">
-        <button
-          onClick={handleToggleAccess}
-          disabled={isPending}
-          className={`text-xs font-medium transition-colors disabled:opacity-50 ${
-            user.is_disabled
-              ? 'text-emerald-600 hover:text-emerald-700'
-              : 'text-red-500 hover:text-red-700'
-          }`}
-        >
-          {isPending ? '…' : user.is_disabled ? 'Restore access' : 'Revoke access'}
-        </button>
+      <td className="px-5 py-4 whitespace-nowrap text-right">
+        <div className="flex items-center justify-end gap-2">
+          {user.role === 'angel' && (
+            <button
+              type="button"
+              onClick={() => onManageHoldings(user)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200/80 hover:bg-amber-100/80 transition-colors cursor-pointer"
+            >
+              <PieChart className="w-3 h-3 text-amber-600" />
+              Holdings
+            </button>
+          )}
+          <button
+            onClick={handleToggleAccess}
+            disabled={isPending}
+            className={`text-xs font-medium transition-colors disabled:opacity-50 cursor-pointer ${
+              user.is_disabled
+                ? 'text-emerald-600 hover:text-emerald-700'
+                : 'text-red-500 hover:text-red-700'
+            }`}
+          >
+            {isPending ? '…' : user.is_disabled ? 'Restore access' : 'Revoke access'}
+          </button>
+        </div>
       </td>
     </tr>
   )
@@ -223,6 +243,14 @@ function UserRow({ user }: { user: ManagedUser }) {
 // ─────────────────────────────────────────────────────────────
 
 export default function UsersTabView({ users }: Props) {
+  const [selectedAngelUser, setSelectedAngelUser] = useState<ManagedUser | null>(null)
+  const [isHoldingsOpen, setIsHoldingsOpen] = useState(false)
+
+  function handleOpenHoldings(user: ManagedUser) {
+    setSelectedAngelUser(user)
+    setIsHoldingsOpen(true)
+  }
+
   return (
     <div className="space-y-6">
       <InviteForm />
@@ -255,13 +283,27 @@ export default function UsersTabView({ users }: Props) {
               </thead>
               <tbody className="divide-y divide-zinc-50">
                 {users.map((user) => (
-                  <UserRow key={user.id} user={user} />
+                  <UserRow
+                    key={user.id}
+                    user={user}
+                    onManageHoldings={handleOpenHoldings}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {/* Slide-over Sheet for Angel Holdings */}
+      <AngelHoldingsSheet
+        user={selectedAngelUser}
+        isOpen={isHoldingsOpen}
+        onClose={() => {
+          setIsHoldingsOpen(false)
+          setSelectedAngelUser(null)
+        }}
+      />
     </div>
   )
 }
