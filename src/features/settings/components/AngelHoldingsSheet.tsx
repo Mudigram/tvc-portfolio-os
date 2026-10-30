@@ -43,20 +43,46 @@ export function AngelHoldingsSheet({
   const [holdings, setHoldings] = useState<AngelHolding[]>([])
   const [available, setAvailable] = useState<AvailableExposure[]>([])
   const [selectedExposureId, setSelectedExposureId] = useState('')
-  const [loading, setLoading] = useState(false)
+  // Starts true only if we mount already open, which is the one case where a
+  // fetch is already in flight before any session reset can run.
+  const [loading, setLoading] = useState(!!user && isOpen)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // A new (user, open) pair is a new editing session. The pending dropdown
+  // choice, the last error and the last success banner all belong to whoever
+  // was open before, not to this angel.
+  //
+  // Those four resets used to be the first thing inside the fetch effect, so
+  // every open rendered the *previous* angel's state first, committed it to the
+  // DOM, and then re-rendered to clear it. Open the sheet for angel A, close it,
+  // open it for angel B: B's panel briefly listed A's holdings under B's email.
+  // For a screen whose whole job is "this position belongs to this investor",
+  // that frame is worth eliminating rather than tolerating.
+  //
+  // Adjusting state during render is React's sanctioned alternative to that
+  // effect - React throws this output away and re-runs the component before
+  // painting, so the stale session never reaches the screen. loading is set true
+  // here because the only way to enter a new session is to open the sheet, which
+  // does fetch.
+  const sessionKey = `${user?.id ?? ''}|${isOpen}`
+  const [lastSession, setLastSession] = useState(sessionKey)
+  if (sessionKey !== lastSession) {
+    setLastSession(sessionKey)
+    setHoldings([])
+    setAvailable([])
+    setSelectedExposureId('')
+    setError(null)
+    setSuccessMsg(null)
+    setLoading(true)
+  }
 
   // Load holdings whenever the user changes or sheet opens
   useEffect(() => {
     if (!user || !isOpen) return
 
     let isMounted = true
-    setLoading(true)
-    setError(null)
-    setSuccessMsg(null)
-    setSelectedExposureId('')
 
     Promise.all([
       getAngelHoldingsAction(user.id),
