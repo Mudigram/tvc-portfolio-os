@@ -97,12 +97,11 @@ export async function updateExposureRow(
   // If amount_invested is provided, insert or update position event in exposure_events
   if (amount_invested !== null && amount_invested > 0) {
     const today = new Date().toISOString().split('T')[0]
-    let eventClient: any = supabase
-    try {
-      eventClient = createServiceRoleClient()
-    } catch {
-      eventClient = supabase
-    }
+    // Guarded above: internal/admin only. The service-role client is a
+    // deliberate choice here, not a fallback — writes to exposure_events cannot
+    // rely on RLS until the policy repair lands. Fails loudly if the key is
+    // missing, instead of silently downgrading to a client that cannot write.
+    const eventClient = createServiceRoleClient()
     
     // Check if an existing event exists for this position
     const { data: existingEvents } = await eventClient
@@ -139,25 +138,48 @@ export async function updateExposureRow(
   // Handle angel portal linkage if provided
   if (formData.has('angel_user_id')) {
     const angel_user_id = parseNullableString(formData.get('angel_user_id') as string)
-    let serviceClient: any = supabase
-    try {
-      serviceClient = createServiceRoleClient()
-    } catch {
-      serviceClient = supabase
-    }
-    // Remove existing link for this exposure position
-    await serviceClient
-      .from('angel_exposures')
-      .delete()
-      .eq('exposure_id', exposureId)
+    const serviceClient = createServiceRoleClient()
 
+    // INSERT BEFORE DELETE. The previous order deleted the existing link first,
+    // so a failed insert left the position silently unlinked: the angel would
+    // lose the holding from /portfolio and the operator saw no error.
     if (angel_user_id) {
+      const { data: currentLinks } = await serviceClient
+        .from('angel_exposures')
+        .select('id, user_id')
+        .eq('exposure_id', exposureId)
+
+      const links = currentLinks ?? []
+      const alreadyLinked = links.some((l: { user_id: string }) => l.user_id === angel_user_id)
+
+      if (!alreadyLinked) {
+        const { error: linkError } = await serviceClient
+          .from('angel_exposures')
+          .insert({ user_id: angel_user_id, exposure_id: exposureId })
+
+        if (linkError) {
+          console.error('[exposure] angel link error:', linkError.message)
+          return {
+            success: false,
+            error: `Position updated, but the angel link failed: ${linkError.message}`,
+          }
+        }
+      }
+
+      // Safe to prune only once the desired link is confirmed present.
+      const staleIds = links
+        .filter((l: { user_id: string }) => l.user_id !== angel_user_id)
+        .map((l: { id: string }) => l.id)
+
+      if (staleIds.length > 0) {
+        await serviceClient.from('angel_exposures').delete().in('id', staleIds)
+      }
+    } else {
+      // Explicitly cleared by the operator — nothing to insert, so deleting is safe.
       await serviceClient
         .from('angel_exposures')
-        .insert({
-          user_id: angel_user_id,
-          exposure_id: exposureId,
-        })
+        .delete()
+        .eq('exposure_id', exposureId)
     }
     revalidatePath('/portfolio')
   }
@@ -306,12 +328,7 @@ export async function createExposureRow(
   // Insert initial investment event into exposure_events log ledger
   if (amount_invested !== null && amount_invested > 0) {
     const today = new Date().toISOString().split('T')[0]
-    let eventClient: any = supabase
-    try {
-      eventClient = createServiceRoleClient()
-    } catch {
-      eventClient = supabase
-    }
+    const eventClient = createServiceRoleClient()
     const { error: eventError } = await eventClient.from('exposure_events').insert({
       position_id: newExposure.id,
       event_type: 'investment',
@@ -329,12 +346,7 @@ export async function createExposureRow(
   if (formData.has('angel_user_id')) {
     const angel_user_id = parseNullableString(formData.get('angel_user_id') as string)
     if (angel_user_id) {
-      let serviceClient: any = supabase
-      try {
-        serviceClient = createServiceRoleClient()
-      } catch {
-        serviceClient = supabase
-      }
+      const serviceClient = createServiceRoleClient()
       await serviceClient
         .from('angel_exposures')
         .insert({
@@ -378,10 +390,9 @@ export async function getExposureAngelLinkAction(
   if (!claims || (claims.role !== 'internal' && claims.role !== 'admin')) {
     return null
   }
-  let serviceClient: any = await createServerClient()
-  try {
-    serviceClient = createServiceRoleClient()
-  } catch {}
+  // Guarded above: internal/admin only. Service role is required because RLS on
+  // angel_exposures only exposes an internal user's own rows otherwise.
+  const serviceClient = createServiceRoleClient()
 
   const { data } = await serviceClient
     .from('angel_exposures')

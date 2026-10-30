@@ -1,5 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/service'
+import { createPortfolioReadClient, createServiceRoleClient } from '@/lib/supabase/service'
 import type {
   AngelCompanySummary,
   AngelPortfolioSummary,
@@ -11,13 +10,15 @@ import type {
   AngelProfileData,
 } from '@/features/angel-portfolio/types'
 
-// Helper to get Supabase client (service role bypasses RLS so exposure_events are never hidden)
+// SECURITY: these reads currently run on the service-role client, which
+// bypasses RLS, only because the angel RLS read policies are dead (they test
+// the wrong JWT claim). See lib/supabase/service.ts -> RLS_BYPASS_STILL_REQUIRED
+// and supabase/migrations/20261030000000_fix_dead_rls_role_claims.sql.
+// Consequence: until that flag is flipped, row isolation on every query below
+// is enforced ONLY by the explicit .eq('user_id', userId) filters. Do not
+// remove one of those filters on the assumption the database will catch it.
 async function getSupabaseClient() {
-  try {
-    return createServiceRoleClient()
-  } catch {
-    return await createServerClient()
-  }
+  return createPortfolioReadClient()
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

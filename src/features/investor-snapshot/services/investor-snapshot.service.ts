@@ -1,5 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/service'
+import { createPortfolioReadClient } from '@/lib/supabase/service'
 import { TVCLABS_HOLDER_IDS } from '@/features/exposure/types'
 import type {
   HolderPositionCard,
@@ -9,13 +8,12 @@ import type {
   MonthlyValuePoint,
 } from '../types'
 
-// Helper to get Supabase client (service role bypasses RLS so exposure_events are never hidden)
+// SECURITY: reads currently run on the service-role client (RLS bypassed) only
+// because the RLS read policies they depend on are dead. See
+// lib/supabase/service.ts -> RLS_BYPASS_STILL_REQUIRED and
+// supabase/migrations/20261030000000_fix_dead_rls_role_claims.sql.
 async function getSupabaseClient() {
-  try {
-    return createServiceRoleClient()
-  } catch {
-    return await createServerClient()
-  }
+  return createPortfolioReadClient()
 }
 
 // Formats a Date object to YYYY-MM-DD using local time
