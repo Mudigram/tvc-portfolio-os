@@ -10,7 +10,7 @@
 -- Run in the Supabase SQL editor, or:  npx supabase db query --linked -f supabase/verify_rls_claims.sql
 -- Exit condition for removing the service-role bypass: section [2] returns 0 rows.
 
-\echo '════════ [1] SUMMARY ════════'
+-- ==== [1] SUMMARY ====
 WITH expr AS (
   SELECT c.relname AS tbl, p.polname AS pol,
          pg_get_expr(p.polqual, p.polrelid) AS qual
@@ -29,7 +29,7 @@ SELECT
   )                                                           AS dead_user_metadata
 FROM expr;
 
-\echo '════════ [2] POLICIES THAT CAN NEVER MATCH (must be empty) ════════'
+-- ==== [2] POLICIES THAT CAN NEVER MATCH (must return 0 rows) ====
 SELECT c.relname AS table_name,
        p.polname AS policy_name,
        CASE
@@ -51,7 +51,7 @@ WHERE n.nspname = 'public'
       )
 ORDER BY c.relname, p.polname;
 
-\echo '════════ [3] THE 8 REPAIRED POLICIES — confirm each row says REPAIRED ════════'
+-- ==== [3] THE 8 REPAIRED POLICIES - confirm every row says REPAIRED ====
 WITH targets(tbl, pol) AS (
   VALUES
     ('advisory_activity', 'angel_advisory_read'),
@@ -80,7 +80,7 @@ LEFT JOIN pg_policy p ON p.polname = t.pol
   AND p.polrelid = ('public.' || t.tbl)::regclass
 ORDER BY status DESC, t.tbl, t.pol;
 
-\echo '════════ [4] ANGEL ISOLATION SANITY — scoping predicate must still be present ════════'
+-- ==== [4] ANGEL ISOLATION SANITY - scoping predicate must still be present ====
 -- A widened policy is a leak. Each angel policy must still be bounded by
 -- auth.uid() (or, for exposure_events, holders.user_id = auth.uid()).
 SELECT c.relname AS table_name,
@@ -94,7 +94,7 @@ WHERE n.nspname = 'public'
                     'angel_funding_rounds_read','exposure_events_angel_own')
 ORDER BY p.polname;
 
-\echo '════════ [5] ESCALATION WATCH — user_metadata used as an authority source ════════'
+-- ==== [5] ESCALATION WATCH - user_metadata used as an authority source ====
 -- MUST return 0 rows. Any policy testing user_metadata can be satisfied by the
 -- end user, because Supabase lets a signed-in user write their own
 -- user_metadata via supabase.auth.updateUser({ data: { role: 'admin' } }) and

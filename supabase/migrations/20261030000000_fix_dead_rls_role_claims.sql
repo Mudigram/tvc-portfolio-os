@@ -1,7 +1,7 @@
 -- Migration: Repair RLS policies that can never match
 -- Timestamp: 2026-10-30
 --
-── THE PROBLEM ──────────────────────────────────────────────────────────────
+-- THE PROBLEM -─────────────────────────────────────────────────────────────
 -- Roles are written ONLY to `app_metadata`:
 --   • settings.actions.ts  → inviteUserByEmail({ data: { role } }) → app_metadata
 --   • settings.actions.ts  → updateUserById({ app_metadata: { role } })
@@ -15,13 +15,13 @@
 -- An audit of 39 policies found 17 dead; 8 have no working sibling policy, so
 -- the access they were meant to grant is simply absent.
 --
-── WHY THE APP STILL APPEARS TO WORK ────────────────────────────────────────
+-- WHY THE APP STILL APPEARS TO WORK -───────────────────────────────────────
 -- angel-portfolio.service.ts and investor-snapshot.service.ts read through the
 -- service-role client, which BYPASSES RLS. The bypass masks these dead
 -- policies. That is why this was never visible, and why the bypass cannot be
 -- removed until this migration is applied.
 --
-── SCOPE ────────────────────────────────────────────────────────────────────
+-- SCOPE -───────────────────────────────────────────────────────────────────
 -- Each policy keeps its ORIGINAL row-scoping predicate. Only the role test is
 -- corrected. Nothing is widened to a role it was not already written to allow.
 -- Direction of change: dead → the access the author intended.
@@ -29,7 +29,7 @@
 -- Apply:  npx supabase db push
 -- Verify: node scripts/verify-rls-claims.mjs
 --
-── STILL DEAD AFTER THIS MIGRATION (harmless duplicates, no behaviour change) ─
+-- STILL DEAD AFTER THIS MIGRATION (harmless duplicates, no behaviour change) -
 -- Each has a working sibling on the same table/command, so they grant nothing
 -- either way. Left in place to keep this diff reviewable; drop them in a
 -- separate cleanup once the verify script is green:
