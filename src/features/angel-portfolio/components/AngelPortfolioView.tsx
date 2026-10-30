@@ -37,9 +37,10 @@ export function AngelPortfolioView({
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  if (companies.length === 0) {
-    return <AngelEmptyState />
-  }
+  // NOTE: the empty-state early return sits BELOW both useMemo calls on purpose.
+  // Returning here would skip the hooks below and React would throw
+  // "Rendered fewer hooks than expected" when `companies` goes 0 → 1
+  // (e.g. an angel's first holding is added while this tab is open).
 
   // Memoized filter counts
   const tabCounts = useMemo(() => {
@@ -78,6 +79,11 @@ export function AngelPortfolioView({
 
     return result
   }, [companies, activeTab, searchQuery])
+
+  // Every hook above has now run on this render — safe to bail out early.
+  if (companies.length === 0) {
+    return <AngelEmptyState />
+  }
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
