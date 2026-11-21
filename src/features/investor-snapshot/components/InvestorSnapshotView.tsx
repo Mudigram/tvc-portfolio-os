@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useTransition } from 'react'
+import { useState, useCallback, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   MonitorPlay,
@@ -56,12 +56,33 @@ export default function InvestorSnapshotView({
   const [customName, setCustomName] = useState('')
   const [copied, setCopied] = useState(false)
 
-  // Sync draft state when server re-renders with new props
-  useEffect(() => {
+  // These three mirror the URL rather than own it: every handler below sets them
+  // optimistically and then pushes a new query string, and the page reads that
+  // back as the initial* props. The mirror earns its keep - without it a date
+  // pick looks dead until the server round trip lands - but it has to realign
+  // when the props move underneath it (navigation, back button, refresh).
+  //
+  // The realignment used to live in a useEffect keyed on those props, which is
+  // the textbook props->state sync: paint the stale draft, commit it to the DOM,
+  // then immediately re-render to correct it. Adjusting state during render is
+  // React's sanctioned alternative - React discards this output and re-runs the
+  // component before painting, so the stale draft never reaches the screen.
+  //
+  // Behaviour is otherwise identical, deliberately: the props remain the source
+  // of truth. One consequence of *that design* is visible and worth knowing -
+  // switching mode to "showcase" drops holder_id from the URL, so
+  // initialHolderId returns undefined and this block clears holderId, making the
+  // page forget which holder was selected when you switch back to statement
+  // mode. That needs a product decision (carry holder_id in the URL for showcase
+  // too?) rather than a hook change, so it is left as-is here.
+  const incomingKey = `${initialMode}|${initialHolderId ?? ''}|${initialAsOf ?? ''}`
+  const [propsKey, setPropsKey] = useState(incomingKey)
+  if (incomingKey !== propsKey) {
+    setPropsKey(incomingKey)
     setMode(initialMode)
     setHolderId(initialHolderId ?? '')
     setAsOf(initialAsOf ?? today)
-  }, [initialMode, initialHolderId, initialAsOf, today])
+  }
 
   // Quick month presets (Current Date + past 6 completed month-ends)
   const monthOptions = useMemo(() => {

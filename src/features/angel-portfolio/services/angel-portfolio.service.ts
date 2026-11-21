@@ -1,5 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { createServiceRoleClient } from '@/lib/supabase/service'
+import { createPortfolioReadClient, createServiceRoleClient } from '@/lib/supabase/service'
 import type {
   AngelCompanySummary,
   AngelPortfolioSummary,
@@ -11,13 +10,15 @@ import type {
   AngelProfileData,
 } from '@/features/angel-portfolio/types'
 
-// Helper to get Supabase client (service role bypasses RLS so exposure_events are never hidden)
+// SECURITY: these reads currently run on the service-role client, which
+// bypasses RLS, only because the angel RLS read policies are dead (they test
+// the wrong JWT claim). See lib/supabase/service.ts -> RLS_BYPASS_STILL_REQUIRED
+// and supabase/migrations/20261030000000_fix_dead_rls_role_claims.sql.
+// Consequence: until that flag is flipped, row isolation on every query below
+// is enforced ONLY by the explicit .eq('user_id', userId) filters. Do not
+// remove one of those filters on the assumption the database will catch it.
 async function getSupabaseClient() {
-  try {
-    return createServiceRoleClient()
-  } catch {
-    return await createServerClient()
-  }
+  return createPortfolioReadClient()
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -473,14 +474,7 @@ export async function getAngelCompanyDetail(
           created_at
         ),
         monthly_updates (
-          id,
-          month,
-          year,
-          status,
-          submitted_at,
-          achievements,
-          challenges,
-          targets
+          *
         ),
         exit_readiness (
           overall_readiness
@@ -585,8 +579,19 @@ export async function getAngelCompanyDetail(
       overall_moic: overallMoic,
     }
 
-    // Sort updates by year desc, month desc
-    const sortedUpdates = [...updates].sort((a, b) => {
+    // Sort updates by year desc, month desc and merge POEM fallback if present
+    const sortedUpdates = [...updates].map((u: any) => {
+      let extra: any = {}
+      if (u.review_notes && typeof u.review_notes === 'string' && u.review_notes.includes('_poem_fallback')) {
+        try {
+          const parsed = JSON.parse(u.review_notes)
+          if (parsed && parsed._poem_fallback) {
+            extra = parsed
+          }
+        } catch {}
+      }
+      return { ...extra, ...u }
+    }).sort((a, b) => {
       const dateA = a.submitted_at ? new Date(a.submitted_at).getTime() : 0
       const dateB = b.submitted_at ? new Date(b.submitted_at).getTime() : 0
       return dateB - dateA

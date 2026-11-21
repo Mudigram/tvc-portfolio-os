@@ -35,7 +35,7 @@ A feature is not complete until all four are true — track against all four, no
 
 - No direct Supabase imports in pages or components — all data access through the service layer.
 - Middleware lives in `src/proxy.ts`, not `middleware.ts`.
-- Env vars: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`. Never put `NEXT_PUBLIC_` on anything privileged (service role key, etc.).
+- Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (browser/anon — this is the name the code reads; there is no `..._PUBLISHABLE_KEY` variable in this repo), `SUPABASE_SECRET_KEY` (service role, server only), `RESEND_API_KEY`. Never put `NEXT_PUBLIC_` on anything privileged (service role key, etc.). See `.env.example`.
 - Use `getClaims()` server-side for auth checks, not `getSession()`.
 - PKCE code exchange is client-side only (`page.tsx` with `createBrowserClient`) — a `route.ts` handler cannot access the code verifier and will fail.
 - Server components fetch data and pre-render into slots; client components receive slots as props and own interactivity only ("slot pattern"). Don't wrap slot-pattern components in `next/dynamic` — the two mechanisms conflict.

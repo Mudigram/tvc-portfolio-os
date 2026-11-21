@@ -23,7 +23,9 @@ export async function saveFundingStatusAction(input: SaveFundingStatusInput) {
       return { success: false, error: 'Unauthorized: Invalid session.' }
     }
 
-    const role = user.app_metadata?.role || user.user_metadata?.role
+    // SECURITY: app_metadata ONLY — user_metadata is user-writable via
+    // supabase.auth.updateUser({ data }) and must never be trusted for roles.
+    const role = user.app_metadata?.role
     if (role !== 'internal' && role !== 'admin') {
       return { success: false, error: 'Unauthorized: Access restricted.' }
     }

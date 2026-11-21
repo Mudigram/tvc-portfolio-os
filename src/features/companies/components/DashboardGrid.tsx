@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import DashboardCard from '@/features/companies/components/DashboardCard'
 import type { CompanyCardData } from '@/features/companies/types'
+import { ChevronDown, ArrowRight } from 'lucide-react'
 
 interface DashboardGridProps {
   companies: CompanyCardData[]
@@ -12,10 +13,10 @@ interface DashboardGridProps {
 export default function DashboardGrid({ companies }: DashboardGridProps) {
   if (companies.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <p className="text-sm font-medium text-zinc-900">No companies yet</p>
-        <p className="text-sm text-zinc-400 mt-1">
-          Add a company to start tracking portfolio health.
+      <div className="flex flex-col items-center justify-center py-24 text-center bg-white rounded-2xl border border-zinc-200/80 p-8 shadow-xs">
+        <p className="text-sm font-medium text-zinc-900">No companies recorded</p>
+        <p className="text-xs text-zinc-500 mt-1">
+          Add a company to start tracking portfolio health and governance.
         </p>
       </div>
     )
@@ -27,12 +28,12 @@ export default function DashboardGrid({ companies }: DashboardGridProps) {
   const unset = companies.filter((c) => !c.portfolio_health)
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {red.length > 0 && (
         <CollapsibleSection
           label="Needs attention"
-          accentColor="text-red-600"
-          dotColor="bg-red-400"
+          accentColor="text-rose-800"
+          dotColor="bg-rose-500"
           companies={red}
           defaultOpen={true}
           cap={red.length} // always show all Red
@@ -41,31 +42,31 @@ export default function DashboardGrid({ companies }: DashboardGridProps) {
       {amber.length > 0 && (
         <CollapsibleSection
           label="Monitor closely"
-          accentColor="text-amber-600"
+          accentColor="text-amber-800"
           dotColor="bg-amber-400"
           companies={amber}
           defaultOpen={true}
-          cap={5}
+          cap={6}
         />
       )}
       {green.length > 0 && (
         <CollapsibleSection
           label="On track"
-          accentColor="text-emerald-600"
-          dotColor="bg-emerald-400"
+          accentColor="text-emerald-800"
+          dotColor="bg-emerald-500"
           companies={green}
           defaultOpen={false}
-          cap={5}
+          cap={6}
         />
       )}
       {unset.length > 0 && (
         <CollapsibleSection
           label="Not reviewed"
-          accentColor="text-zinc-500"
+          accentColor="text-zinc-600"
           dotColor="bg-zinc-300"
           companies={unset}
           defaultOpen={false}
-          cap={5}
+          cap={6}
         />
       )}
 
@@ -73,9 +74,10 @@ export default function DashboardGrid({ companies }: DashboardGridProps) {
       <div className="pt-2 flex justify-end">
         <Link
           href="/companies"
-          className="text-xs font-medium text-[#1a23bd] hover:underline underline-offset-2 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700 hover:text-zinc-950 transition-colors"
         >
-          View full portfolio table ({companies.length} companies) →
+          <span>View full portfolio table ({companies.length} companies)</span>
+          <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </div>
@@ -112,30 +114,28 @@ function CollapsibleSection({
   const hasMore = companies.length > cap
 
   return (
-    <div className="border border-zinc-100 rounded-xl bg-white overflow-hidden">
+    <div className="border border-zinc-200/80 rounded-2xl bg-white overflow-hidden shadow-2xs">
       {/* Section header — always visible, acts as toggle */}
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50/60 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-zinc-50/50 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-2.5">
           <span className={`w-2 h-2 rounded-full ${dotColor}`} />
-          <span className={`text-xs font-semibold uppercase tracking-wider ${accentColor}`}>
+          <span className={`text-xs font-medium ${accentColor}`}>
             {label}
           </span>
-          <span className="text-xs text-zinc-300 font-medium">{companies.length}</span>
+          <span className="text-xs font-mono text-zinc-400 tabular-nums">({companies.length})</span>
         </div>
-        <svg
-          className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown
+          className={`w-4 h-4 text-zinc-400 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {/* Card grid — animated open/close */}
       {open && (
-        <div className="px-5 pb-5 border-t border-zinc-50">
+        <div className="px-5 pb-5 border-t border-zinc-100">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pt-4">
             {visible.map((company) => (
               <DashboardCard key={company.id} company={company} />
@@ -145,12 +145,13 @@ function CollapsibleSection({
           {/* Show more / show less */}
           {hasMore && (
             <button
+              type="button"
               onClick={() => setExpanded((e) => !e)}
-              className="mt-4 w-full py-2 text-xs font-medium text-zinc-400 hover:text-zinc-700 border border-dashed border-zinc-200 rounded-lg transition-colors"
+              className="mt-4 w-full py-2 text-xs font-medium text-zinc-500 hover:text-zinc-800 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
             >
               {expanded
-                ? 'Show less ↑'
-                : `Show ${companies.length - cap} more ↓`}
+                ? 'Show fewer positions ↑'
+                : `Show ${companies.length - cap} more positions ↓`}
             </button>
           )}
         </div>

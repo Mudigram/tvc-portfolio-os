@@ -85,10 +85,34 @@ Security is a first-class citizen, ensuring that institutional data is strictly 
 All database mutations (Creates, Updates, Deletes) are handled via Next.js Server Actions (`*.action.ts`). This pattern completely eliminates the need to build and maintain traditional REST API endpoints, reducing boilerplate and attack surface.
 
 ### Supabase & Row Level Security (RLS)
-The database operates on PostgreSQL with Supabase. 
+The database operates on PostgreSQL with Supabase.
+
 1.  **Server Client**: Data is queried using a securely instantiated Supabase Server Client (`src/lib/supabase/server.ts`) that automatically inherits the user's session cookie.
-2.  **RLS Policies**: PostgreSQL Row Level Security is enforced at the database level. Even if a backend query is maliciously altered, the database will refuse to return rows the authenticated user does not have permission to read or modify.
-3.  **Role-Based Access Control (RBAC)**: Roles (e.g., `internal`, `angel`, `founder`) are utilized to conditionally render UI elements via the `useRole` hook and `RoleShell` component.
+2.  **RLS Policies**: PostgreSQL Row Level Security is enforced at the database level for internal reads and writes. Where a read path currently runs on the service-role client, RLS is bypassed and isolation is enforced by application code instead — see the known gap below. Do not describe RLS as a blanket guarantee while that flag is set.
+3.  **Role-Based Access Control (RBAC)**: Roles (`internal`, `admin`, `angel`, `founder`) gate routing in `src/proxy.ts`, layout access via `RoleShell`, conditional UI via `useRole`, and every server action via an explicit role check.
+
+### Role authority — single rule
+**`app_metadata.role` is the only trusted source of a user's role.**
+
+Never read a role from `user_metadata`. Supabase lets a signed-in user write their own
+`user_metadata` through `supabase.auth.updateUser({ data })`, and `user_metadata` is embedded
+in the JWT — so anything that trusts it can be escalated by the user themselves. The same
+applies to bare `auth.jwt() ->> 'role'`, which returns the PostgreSQL role (`authenticated`),
+never the application role.
+
+`supabase/verify_rls_claims.sql` checks both conditions against the live database.
+
+### Known gap — angel and investor-snapshot reads bypass RLS
+`angel-portfolio.service.ts` and `investor-snapshot.service.ts` read through the service-role
+client, which skips RLS. On those paths, row isolation depends entirely on the explicit
+`.eq('user_id', userId)` filters surviving future edits.
+
+This is tracked as one reversible flag: `RLS_BYPASS_STILL_REQUIRED` in
+`src/lib/supabase/service.ts`. The underlying cause is a set of RLS policies that tested the
+wrong JWT claim and therefore never matched; they are repaired by
+`supabase/migrations/20261030000000_fix_dead_rls_role_claims.sql`. Flip the flag to `false`
+only once that migration is applied and `supabase/verify_rls_claims.sql` reports clean.
+Until then, Gate 1's "access control tested" criterion is **not** evidenced at the database layer.
 
 ---
 

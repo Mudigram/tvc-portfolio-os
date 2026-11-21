@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Machine-local scratch: throwaway diagnostic scripts, not application code.
+    // They are CommonJS by design (run directly with node against the database),
+    // so linting them reported 16 no-require-imports errors that were never
+    // defects in anything that ships.
+    "scratch/**",
+    // Generated / CLI-owned.
+    "supabase/.temp/**",
   ]),
 ]);
 

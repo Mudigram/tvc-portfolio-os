@@ -14,8 +14,11 @@ export async function logAdvisoryActivityAction(input: CreateAdvisoryActivityInp
       return { success: false, error: 'Unauthorized credentials.' }
     }
 
-    // Comprehensive fallback for role mapping validation
-    const role = user.user_metadata?.role || user.app_metadata?.role
+    // SECURITY: read the role from app_metadata ONLY.
+    // user_metadata is writable by the end user through
+    // supabase.auth.updateUser({ data: { role: 'admin' } }), so falling back to
+    // it here would let any founder or angel promote themselves to admin.
+    const role = user.app_metadata?.role
     
     if (role !== 'internal' && role !== 'admin') {
       console.error(`[Advisory Action Error]: User ${user.email} with role "${role}" is not authorized as "internal" or "admin".`)

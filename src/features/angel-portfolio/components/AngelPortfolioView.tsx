@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type {
   AngelCompanySummary,
   AngelPortfolioSummary,
@@ -8,10 +8,10 @@ import type {
 } from '@/features/angel-portfolio/types'
 import { AngelSummaryBar } from '@/features/angel-portfolio/components/AngelSummaryBar'
 import { AngelCompanyCard } from '@/features/angel-portfolio/components/AngelCompanyCard'
-import { AngelActivityFeed } from '@/features/angel-portfolio/components/AngelActivityFeed'
+import { AngelActivityDrawer } from '@/features/angel-portfolio/components/AngelActivityDrawer'
 import { AngelEmptyState } from '@/features/angel-portfolio/components/AngelEmptyState'
 import { AngelSignalBanner } from '@/features/angel-portfolio/components/AngelSignalBanner'
-import { AngelPulseRibbon } from '@/features/angel-portfolio/components/detail/AngelPulseRibbon'
+import { Search, Printer, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface AngelPortfolioViewProps {
@@ -29,103 +29,179 @@ const TABS: { id: FilterTab; label: string }[] = [
   { id: 'raising', label: 'Actively raising' },
 ]
 
-function applyFilter(companies: AngelCompanySummary[], tab: FilterTab): AngelCompanySummary[] {
-  switch (tab) {
-    case 'on-track':  return companies.filter((c) => c.portfolio_health === 'Green')
-    case 'monitor':   return companies.filter((c) => c.portfolio_health === 'Amber' || c.portfolio_health === 'Red')
-    case 'raising':   return companies.filter((c) => c.is_actively_raising)
-    default:          return companies
-  }
-}
-
 export function AngelPortfolioView({
   companies,
   summary,
   events,
 }: AngelPortfolioViewProps) {
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
+  // Memoized filter counts
+  const tabCounts = useMemo(() => {
+    return {
+      all: companies.length,
+      'on-track': companies.filter((c) => c.portfolio_health === 'Green').length,
+      monitor: companies.filter((c) => c.portfolio_health === 'Amber' || c.portfolio_health === 'Red').length,
+      raising: companies.filter((c) => c.is_actively_raising).length,
+    }
+  }, [companies])
+
+  // Filtered companies based on active tab and search query
+  const filtered = useMemo(() => {
+    let result = companies
+    switch (activeTab) {
+      case 'on-track':
+        result = result.filter((c) => c.portfolio_health === 'Green')
+        break
+      case 'monitor':
+        result = result.filter((c) => c.portfolio_health === 'Amber' || c.portfolio_health === 'Red')
+        break
+      case 'raising':
+        result = result.filter((c) => c.is_actively_raising)
+        break
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      result = result.filter(
+        (c) =>
+          c.company_name.toLowerCase().includes(q) ||
+          (c.sector && c.sector.toLowerCase().includes(q)) ||
+          (c.stage && c.stage.toLowerCase().includes(q))
+      )
+    }
+
+    return result
+  }, [companies, activeTab, searchQuery])
+
+  // Early return if no companies exist for this angel
   if (companies.length === 0) {
     return <AngelEmptyState />
   }
 
-  const filtered = applyFilter(companies, activeTab)
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') {
+      window.print()
+    }
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 pb-12">
 
-      {/* Page header */}
-      <div>
-        <h1 className="text-lg font-medium text-zinc-900">My Portfolio</h1>
-        <p className="text-sm text-zinc-400 mt-0.5">
-          Your personal positions across TVCLabs portfolio companies.
-        </p>
+      {/* Page header with action toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-950">
+            Portfolio overview
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+            Personal exposure and governance telemetry across your TVCLabs holdings
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 self-start sm:self-center">
+          <AngelActivityDrawer events={events} />
+
+          <button
+            type="button"
+            onClick={handlePrint}
+            aria-label="Export or print portfolio summary"
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs font-medium text-zinc-700 transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
+          >
+            <Printer className="w-3.5 h-3.5 text-zinc-500" />
+            <span className="hidden sm:inline">Export ledger</span>
+          </button>
+        </div>
       </div>
 
+      {/* Ambient active raising signal banner */}
       <AngelSignalBanner companies={companies} />
 
-      {/* KPI Tiles */}
+      {/* Carta-style contiguous financial ledger bar */}
       <AngelSummaryBar summary={summary} />
 
-      {/* Main content — responsive split */}
-      <div className="flex flex-col lg:flex-row gap-10">
-
-        {/* Portfolio grid — left / full on mobile */}
-        <div className="flex-1 min-w-0 space-y-5">
-
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-            {TABS.map((tab) => {
-              const count = applyFilter(companies, tab.id).length
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+      {/* Search & filter toolbar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+        
+        {/* Filter tabs */}
+        <div
+          role="tablist"
+          aria-label="Filter positions by health and status"
+          className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none"
+        >
+          {TABS.map((tab) => {
+            const count = tabCounts[tab.id]
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'inline-flex items-center gap-2 px-3.5 h-9 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900',
+                  isActive
+                    ? 'bg-zinc-900 text-white shadow-2xs'
+                    : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-950'
+                )}
+              >
+                <span>{tab.label}</span>
+                <span
                   className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors',
-                    isActive
-                      ? 'bg-zinc-900 text-white'
-                      : 'bg-white border border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-700'
+                    'font-mono text-xs tabular-nums',
+                    isActive ? 'text-zinc-400' : 'text-zinc-500'
                   )}
                 >
-                  {tab.label}
-                  <span className={cn(
-                    'inline-flex items-center justify-center rounded-full text-[10px] font-semibold w-4 h-4',
-                    isActive ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'
-                  )}>
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Cards */}
-          {filtered.length === 0 ? (
-            <p className="text-sm text-zinc-400 py-6">No companies match this filter.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((company) => (
-                <AngelCompanyCard key={company.company_id} company={company} />
-              ))}
-            </div>
-          )}
+                  {count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
-        {/* Activity feed — right on desktop, below on mobile */}
-        <div className="w-full lg:w-72 shrink-0">
-          <div className="lg:sticky lg:top-8 space-y-4">
-            <AngelPulseRibbon events={events} />
-            <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wide">
-              Recent activity
-            </h2>
-            <AngelActivityFeed events={events} />
-          </div>
+        {/* Search input */}
+        <div className="relative sm:w-64">
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search company or sector..."
+            aria-label="Search portfolio companies"
+            className="w-full bg-white border border-zinc-200 rounded-lg pl-9 pr-3 h-9 text-xs font-normal text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all shadow-2xs"
+          />
         </div>
 
       </div>
+
+      {/* Dossier cards full-width grid */}
+      {filtered.length === 0 ? (
+        <div className="bg-white border border-zinc-200/80 rounded-2xl p-12 text-center shadow-xs">
+          <SlidersHorizontal className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
+          <p className="text-sm font-medium text-zinc-800">No portfolio companies match your criteria</p>
+          <p className="text-xs text-zinc-500 mt-1">Try clearing your search query or switching filter tabs</p>
+          {(searchQuery || activeTab !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('')
+                setActiveTab('all')
+              }}
+              className="mt-4 px-3 h-9 rounded-lg border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              Reset filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((company) => (
+            <AngelCompanyCard key={company.company_id} company={company} />
+          ))}
+        </div>
+      )}
 
     </div>
   )
-}
+}

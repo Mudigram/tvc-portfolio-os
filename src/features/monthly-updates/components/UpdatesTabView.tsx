@@ -20,7 +20,9 @@ import {
   Target as TargetIcon,
   MessageSquare,
   FileEdit,
+  FileSpreadsheet,
 } from 'lucide-react'
+import { PoemMetricsDrawer } from './PoemMetricsDrawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,6 +30,7 @@ import { Spinner } from '@/components/ui/spinner'
 
 interface UpdatesTabViewProps {
   companyId: string
+  companyName?: string
   updates: MonthlyUpdate[]
   status: UpdateStatusInfo
   targets?: ReportingTarget[]
@@ -50,6 +53,7 @@ const STATUS_STYLES: Record<string, { badge: string; icon: any }> = {
   Draft: { badge: 'text-zinc-600 bg-zinc-100 border-zinc-200', icon: Clock },
   Submitted: { badge: 'text-blue-700 bg-blue-50 border-blue-200', icon: Send },
   Verified: { badge: 'text-emerald-700 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+  Reviewed: { badge: 'text-emerald-700 bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
   'Needs Correction': { badge: 'text-amber-700 bg-amber-50 border-amber-200', icon: AlertCircle },
 }
 
@@ -291,11 +295,13 @@ function UpdateCard({
   isLatest,
   isInternal,
   companyId,
+  onEditPoem,
 }: {
   update: MonthlyUpdate
   isLatest: boolean
   isInternal: boolean
   companyId: string
+  onEditPoem?: (u: MonthlyUpdate) => void
 }) {
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewStatus, setReviewStatus] = useState<'Verified' | 'Needs Correction'>('Verified')
@@ -326,6 +332,15 @@ function UpdateCard({
     })
   }
 
+  const hasPoemMetrics = Boolean(
+    update.active_customers != null ||
+    update.monthly_revenue != null ||
+    update.burn_rate != null ||
+    update.runway_months != null ||
+    update.team_size != null ||
+    update.monthly_user_growth_pct != null
+  )
+
   return (
     <div className={`rounded-xl border bg-white p-6 space-y-4 shadow-sm ${isLatest ? 'border-zinc-300' : 'border-zinc-100'}`}>
       <div className="flex items-start justify-between">
@@ -349,6 +364,18 @@ function UpdateCard({
             {update.status}
           </span>
 
+          {isInternal && (
+            <button
+              type="button"
+              onClick={() => onEditPoem?.(update)}
+              className="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors inline-flex items-center gap-1"
+              title="Record or update POEM KPIs for this period"
+            >
+              <FileSpreadsheet className="w-3 h-3 text-[#1a23bd]" />
+              POEM KPIs
+            </button>
+          )}
+
           {isInternal && update.status !== 'Draft' && (
             <button
               onClick={() => setShowReviewModal(!showReviewModal)}
@@ -360,6 +387,65 @@ function UpdateCard({
           )}
         </div>
       </div>
+
+      {/* POEM Metrics Snapshot if available */}
+      {hasPoemMetrics && (
+        <div className="p-3.5 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-wider flex items-center gap-1.5">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#1a23bd]" />
+              POEM KPIs Snapshot
+            </span>
+            {isInternal && (
+              <button
+                type="button"
+                onClick={() => onEditPoem?.(update)}
+                className="text-xs font-semibold text-[#1a23bd] hover:underline"
+              >
+                Edit in Drawer &rarr;
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            {update.monthly_revenue != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">Monthly Rev</div>
+                <div className="font-bold text-zinc-900">${Number(update.monthly_revenue).toLocaleString()}</div>
+              </div>
+            )}
+            {update.burn_rate != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">Burn Rate</div>
+                <div className="font-bold text-zinc-900">${Number(update.burn_rate).toLocaleString()}</div>
+              </div>
+            )}
+            {update.runway_months != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">Runway</div>
+                <div className="font-bold text-zinc-900">{update.runway_months} mo</div>
+              </div>
+            )}
+            {update.active_customers != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">Active Users</div>
+                <div className="font-bold text-zinc-900">{Number(update.active_customers).toLocaleString()}</div>
+              </div>
+            )}
+            {update.monthly_user_growth_pct != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">MoM Growth</div>
+                <div className="font-bold text-emerald-600">+{update.monthly_user_growth_pct}%</div>
+              </div>
+            )}
+            {update.team_size != null && (
+              <div className="bg-white p-2 rounded-lg border border-zinc-100">
+                <div className="text-[10px] text-zinc-400 font-medium">Team Size</div>
+                <div className="font-bold text-zinc-900">{update.team_size}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Review Notes Display (if verified or needs correction) */}
       {update.review_notes && (
@@ -600,10 +686,24 @@ function SubmitForm({
 }
 
 // ── Main View Component ────────────────────────────────────────────────────────
-export function UpdatesTabView({ companyId, updates, status, targets = [] }: UpdatesTabViewProps) {
+export function UpdatesTabView({
+  companyId,
+  companyName,
+  updates,
+  status,
+  targets = [],
+}: UpdatesTabViewProps) {
   const { role } = useRole()
   const isInternal = role === 'internal' || role === 'admin'
   const canSubmit = isInternal || role === 'founder'
+
+  const [poemDrawerOpen, setPoemDrawerOpen] = useState(false)
+  const [editingPoemUpdate, setEditingPoemUpdate] = useState<MonthlyUpdate | null>(null)
+
+  function handleOpenPoemDrawer(update?: MonthlyUpdate) {
+    setEditingPoemUpdate(update || null)
+    setPoemDrawerOpen(true)
+  }
 
   // Find draft or correction update for current period
   const activeSubmission = updates.find(
@@ -621,6 +721,31 @@ export function UpdatesTabView({ companyId, updates, status, targets = [] }: Upd
     <div className="space-y-8 max-w-3xl">
       {/* Status banner */}
       <StatusBanner status={status} companyId={companyId} isInternal={isInternal} />
+
+      {/* POEM Action Bar for Internal PM */}
+      {isInternal && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-indigo-100 bg-gradient-to-r from-blue-50/60 to-indigo-50/70 shadow-sm">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4 text-[#1a23bd]" />
+              <h3 className="text-xs font-bold text-zinc-900 uppercase tracking-wide">
+                POEM Framework KPIs & Bulk Import
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-600">
+              Manage 19 Proposition, Organization, Economics, and Milestones metrics for Angel reporting or batch-import monthly CSVs.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => handleOpenPoemDrawer()}
+            className="shrink-0 gap-1.5 bg-[#1a23bd] hover:bg-[#1a23bd]/90 text-white shadow-sm"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            + Record / Import POEM
+          </Button>
+        </div>
+      )}
 
       {/* Reporting Targets Section */}
       <ReportingTargetsCard
@@ -663,11 +788,25 @@ export function UpdatesTabView({ companyId, updates, status, targets = [] }: Upd
                 isLatest={index === 0 && update.status !== 'Draft'}
                 isInternal={isInternal}
                 companyId={companyId}
+                onEditPoem={handleOpenPoemDrawer}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* POEM Metrics & CSV Import Drawer */}
+      <PoemMetricsDrawer
+        isOpen={poemDrawerOpen}
+        onClose={() => {
+          setPoemDrawerOpen(false)
+          setEditingPoemUpdate(null)
+        }}
+        companyId={companyId}
+        companyName={companyName}
+        initialUpdate={editingPoemUpdate}
+        existingUpdates={updates}
+      />
     </div>
   )
 }
