@@ -61,7 +61,7 @@ export function computeUpdateStatus(updates: MonthlyUpdate[]): UpdateStatusInfo 
   const currentMonth = now.getMonth() + 1
   const currentYear = now.getFullYear()
 
-  const activeSubmissions = updates.filter((u) => u.status === 'Submitted' || u.status === 'Verified')
+  const activeSubmissions = updates.filter((u) => u.status === 'Submitted' || u.status === 'Verified' || u.status === 'Reviewed')
 
   const hasCurrentPeriodUpdate = activeSubmissions.some(
     (u) => u.month === currentMonth && u.year === currentYear

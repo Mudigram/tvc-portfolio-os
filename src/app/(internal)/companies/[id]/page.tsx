@@ -42,7 +42,7 @@ export default async function CompanyPage({ params }: CompanyPageProps) {
     />
   )
 
-  const updatesElement  = <CompanyUpdatesTab  companyId={resolvedParams.id} />
+  const updatesElement  = <CompanyUpdatesTab  companyId={resolvedParams.id} companyName={company.name} />
   const fundingElement  = <CompanyFundingTab  companyId={resolvedParams.id} />
   const advisoryElement = <CompanyAdvisoryTab companyId={resolvedParams.id} />
   const exitElement     = <CompanyExitReadinessTab companyId={resolvedParams.id} />

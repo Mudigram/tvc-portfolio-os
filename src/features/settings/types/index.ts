@@ -82,4 +82,24 @@ export interface AppSetting {
     instrument_name: string | null
     exposure_type: string
     amount_invested: number
+  }
+
+  export interface EcosystemCompany {
+    id: string
+    name: string
+    logo_path: string | null
+    sector: string | null
+    stage: string | null
+    country: string | null
+    existing_positions: AvailableExposure[]
+  }
+
+  export interface CreateAngelHoldingInput {
+    angelUserId: string
+    companyId: string
+    amountInvested: number
+    exposureType: string
+    instrumentName?: string
+    ownershipPct?: number | null
+    issueDate?: string | null
   }

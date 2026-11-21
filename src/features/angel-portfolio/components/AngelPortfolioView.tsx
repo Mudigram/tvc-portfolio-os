@@ -37,11 +37,6 @@ export function AngelPortfolioView({
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // NOTE: the empty-state early return sits BELOW both useMemo calls on purpose.
-  // Returning here would skip the hooks below and React would throw
-  // "Rendered fewer hooks than expected" when `companies` goes 0 → 1
-  // (e.g. an angel's first holding is added while this tab is open).
-
   // Memoized filter counts
   const tabCounts = useMemo(() => {
     return {
@@ -80,7 +75,7 @@ export function AngelPortfolioView({
     return result
   }, [companies, activeTab, searchQuery])
 
-  // Every hook above has now run on this render — safe to bail out early.
+  // Early return if no companies exist for this angel
   if (companies.length === 0) {
     return <AngelEmptyState />
   }
@@ -94,14 +89,14 @@ export function AngelPortfolioView({
   return (
     <div className="space-y-6 pb-12">
 
-      {/* Page Header with Action Toolbar */}
+      {/* Page header with action toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
-            Portfolio Overview
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-950">
+            Portfolio overview
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-600 mt-1">
-            Personal exposure and governance telemetry across your TVCLabs portfolio holdings.
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+            Personal exposure and governance telemetry across your TVCLabs holdings
           </p>
         </div>
 
@@ -112,24 +107,24 @@ export function AngelPortfolioView({
             type="button"
             onClick={handlePrint}
             aria-label="Export or print portfolio summary"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs font-semibold text-zinc-700 transition-colors shadow-2xs min-h-[38px] cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs font-medium text-zinc-700 transition-colors shadow-2xs cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
           >
             <Printer className="w-3.5 h-3.5 text-zinc-500" />
-            <span className="hidden sm:inline">Export / Print</span>
+            <span className="hidden sm:inline">Export ledger</span>
           </button>
         </div>
       </div>
 
-      {/* Ambient Active Raising Signal Banner */}
+      {/* Ambient active raising signal banner */}
       <AngelSignalBanner companies={companies} />
 
-      {/* Carta-style Contiguous Financial Ledger Bar */}
+      {/* Carta-style contiguous financial ledger bar */}
       <AngelSummaryBar summary={summary} />
 
-      {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+      {/* Search & filter toolbar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
         
-        {/* Accessible Filter Tabs */}
+        {/* Filter tabs */}
         <div
           role="tablist"
           aria-label="Filter positions by health and status"
@@ -145,17 +140,17 @@ export function AngelPortfolioView({
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all min-h-[38px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600',
+                  'inline-flex items-center gap-2 px-3.5 h-9 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900',
                   isActive
                     ? 'bg-zinc-900 text-white shadow-2xs'
-                    : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                    : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-950'
                 )}
               >
                 <span>{tab.label}</span>
                 <span
                   className={cn(
-                    'inline-flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 py-0.2 min-w-4.5',
-                    isActive ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-600'
+                    'font-mono text-xs tabular-nums',
+                    isActive ? 'text-zinc-400' : 'text-zinc-500'
                   )}
                 >
                   {count}
@@ -165,27 +160,27 @@ export function AngelPortfolioView({
           })}
         </div>
 
-        {/* Quick Search Input */}
+        {/* Search input */}
         <div className="relative sm:w-64">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by company or sector..."
+            placeholder="Search company or sector..."
             aria-label="Search portfolio companies"
-            className="w-full bg-white border border-zinc-200 rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all min-h-[38px] shadow-2xs"
+            className="w-full bg-white border border-zinc-200 rounded-lg pl-9 pr-3 h-9 text-xs font-normal text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all shadow-2xs"
           />
         </div>
 
       </div>
 
-      {/* Dossier Cards Full-Width Grid */}
+      {/* Dossier cards full-width grid */}
       {filtered.length === 0 ? (
         <div className="bg-white border border-zinc-200/80 rounded-2xl p-12 text-center shadow-xs">
           <SlidersHorizontal className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-zinc-800">No portfolio companies match your criteria</p>
-          <p className="text-xs text-zinc-500 mt-1">Try clearing your search query or switching filter tabs.</p>
+          <p className="text-sm font-medium text-zinc-800">No portfolio companies match your criteria</p>
+          <p className="text-xs text-zinc-500 mt-1">Try clearing your search query or switching filter tabs</p>
           {(searchQuery || activeTab !== 'all') && (
             <button
               type="button"
@@ -193,9 +188,9 @@ export function AngelPortfolioView({
                 setSearchQuery('')
                 setActiveTab('all')
               }}
-              className="mt-4 px-3 py-1.5 rounded-lg border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+              className="mt-4 px-3 h-9 rounded-lg border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
             >
-              Reset Filters
+              Reset filters
             </button>
           )}
         </div>
@@ -210,4 +205,3 @@ export function AngelPortfolioView({
     </div>
   )
 }
-

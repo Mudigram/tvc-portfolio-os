@@ -1,21 +1,15 @@
 import type { CompanyCardData } from '@/features/companies/types'
-import Link from 'next/link' // Added the missing Link import
+import Link from 'next/link'
+import { AlertCircle } from 'lucide-react'
 
 interface DashboardCardProps {
   company: CompanyCardData
 }
 
-// Added Record<string, string> fallback or explicit indexing compatibility
-const HEALTH_STYLES: Record<string, string> = {
-  Green: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Amber: 'text-amber-700 bg-amber-50 border-amber-200',
-  Red:   'text-red-700 bg-red-50 border-red-200',
-}
-
-const HEALTH_LABEL: Record<string, string> = {
-  Green: 'Green',
-  Amber: 'Amber',
-  Red:   'Red',
+const HEALTH_CONFIG: Record<string, { badge: string; dot: string; label: string }> = {
+  Green: { badge: 'text-emerald-800 bg-emerald-50/80 border-emerald-200/80', dot: 'bg-emerald-500', label: 'On track' },
+  Amber: { badge: 'text-amber-800 bg-amber-50/80 border-amber-200/80', dot: 'bg-amber-500', label: 'Monitor' },
+  Red:   { badge: 'text-rose-800 bg-rose-50/80 border-rose-200/80', dot: 'bg-rose-500', label: 'Attention' },
 }
 
 function formatDate(iso: string | null): string {
@@ -28,69 +22,60 @@ function formatDate(iso: string | null): string {
 }
 
 export default function DashboardCard({ company }: DashboardCardProps) {
-  // Added a fallback in case portfolio_health doesn't match the keys perfectly
-  const healthStyle = company.portfolio_health && HEALTH_STYLES[company.portfolio_health]
-    ? HEALTH_STYLES[company.portfolio_health]
-    : 'text-zinc-500 bg-zinc-50 border-zinc-200'
-
-  const healthLabel = company.portfolio_health && HEALTH_LABEL[company.portfolio_health]
-    ? HEALTH_LABEL[company.portfolio_health]
-    : 'Unset'
-
-  const dotColor = company.portfolio_health === 'Green'
-    ? 'bg-emerald-500'
-    : company.portfolio_health === 'Amber'
-    ? 'bg-amber-500'
-    : company.portfolio_health === 'Red'
-    ? 'bg-red-500'
-    : 'bg-zinc-400'
+  const health = company.portfolio_health ? HEALTH_CONFIG[company.portfolio_health] : null
 
   return (
     <Link
       href={`/companies/${company.id}`}
-      className="group block rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-[0_1px_3px_0_rgba(15,23,42,0.04),0_6px_16px_-4px_rgba(15,23,42,0.02)] hover:border-zinc-300 hover:shadow-[0_4px_12px_-2px_rgba(15,23,42,0.06),0_12px_24px_-4px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-0.5"
+      className="group block rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-xs hover:border-zinc-300 hover:shadow-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900"
     >
       {/* Top row — name + health badge */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-zinc-900 group-hover:text-primary transition-colors truncate">
+          <p className="text-sm font-semibold text-zinc-950 group-hover:text-zinc-700 transition-colors truncate">
             {company.name}
           </p>
-          <p className="text-xs text-zinc-400 mt-0.5 truncate">
+          <p className="text-xs text-zinc-500 mt-0.5 truncate">
             {[company.stage, company.sector].filter(Boolean).join(' · ') || '—'}
           </p>
         </div>
-        <span
-          className={`
-            shrink-0 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border text-[11px] font-semibold
-            ${healthStyle}
-          `}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-          {healthLabel}
-        </span>
+        {health ? (
+          <span
+            className={`
+              shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-xs font-medium
+              ${health.badge}
+            `}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${health.dot}`} />
+            {health.label}
+          </span>
+        ) : (
+          <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-medium text-zinc-500 bg-zinc-50 border-zinc-200">
+            Unreviewed
+          </span>
+        )}
       </div>
 
       {/* Divider */}
-      <div className="border-t border-zinc-50 mb-4" />
+      <div className="border-t border-zinc-100 mb-4" />
 
       {/* Signal rows */}
-      <div className="space-y-2.5">
+      <div className="space-y-2 text-xs">
 
         {/* POEM submission */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-400">This month&apos;s update</span>
+          <span className="text-zinc-500">Monthly update</span>
           {company.update_submitted_this_cycle ? (
-            <span className="text-xs font-medium text-emerald-600">Submitted</span>
+            <span className="font-medium text-emerald-700">Submitted</span>
           ) : (
-            <span className="text-xs font-medium text-red-500">Overdue</span>
+            <span className="font-medium text-rose-700">Overdue</span>
           )}
         </div>
 
         {/* Last update date */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-zinc-400">Last update</span>
-          <span className="text-xs text-zinc-600">
+          <span className="text-zinc-500">Last briefing</span>
+          <span className="text-zinc-700 font-mono">
             {formatDate(company.last_update_date)}
           </span>
         </div>
@@ -98,16 +83,16 @@ export default function DashboardCard({ company }: DashboardCardProps) {
         {/* Funding status */}
         {company.is_actively_raising && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400">Fundraising</span>
-            <span className="text-xs font-medium text-amber-600">Actively raising</span>
+            <span className="text-zinc-500">Fundraising</span>
+            <span className="font-medium text-amber-800">Actively raising</span>
           </div>
         )}
 
         {/* Exit readiness */}
         {company.exit_readiness_signal && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400">Exit readiness</span>
-            <span className="text-xs text-zinc-600">
+            <span className="text-zinc-500">Exit readiness</span>
+            <span className="text-zinc-800 font-medium">
               {company.exit_readiness_signal}
             </span>
           </div>
@@ -115,18 +100,17 @@ export default function DashboardCard({ company }: DashboardCardProps) {
 
         {/* Stale verification warning */}
         {company.has_stale_verification && (
-          <div className="mt-3 pt-3 border-t border-zinc-50">
-            <p className="text-xs text-amber-600 font-medium">
-              ⚠ Verification overdue — review before setting health status
-            </p>
+          <div className="mt-3 pt-3 border-t border-zinc-100 flex items-start gap-1.5 text-xs text-amber-800">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+            <span>Verification overdue — review before setting health status</span>
           </div>
         )}
       </div>
 
-      {/* Health reviewed date — bottom, quiet */}
+      {/* Health reviewed date */}
       {company.health_reviewed_at && (
-        <p className="mt-4 text-[10px] text-zinc-300">
-          Status reviewed {formatDate(company.health_reviewed_at)}
+        <p className="mt-4 pt-3 border-t border-zinc-50 text-xs text-zinc-400 font-mono">
+          Reviewed {formatDate(company.health_reviewed_at)}
         </p>
       )}
     </Link>

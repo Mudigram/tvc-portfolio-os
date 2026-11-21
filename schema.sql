@@ -189,7 +189,9 @@ ALTER TYPE "public"."recipient_type" OWNER TO "postgres";
 CREATE TYPE "public"."update_status_enum" AS ENUM (
     'Draft',
     'Submitted',
-    'Reviewed'
+    'Reviewed',
+    'Verified',
+    'Needs Correction'
 );
 
 
@@ -748,6 +750,27 @@ CREATE TABLE IF NOT EXISTS "public"."monthly_updates" (
     "submitted_at" timestamp with time zone,
     "status" "public"."update_status_enum" DEFAULT 'Draft'::"public"."update_status_enum" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"(),
+    "review_notes" "text",
+    "reviewed_at" timestamp with time zone,
+    "reviewed_by" "text",
+    "active_customers" integer,
+    "monthly_user_growth_pct" numeric(10,2),
+    "paying_customers" integer,
+    "churn_rate_pct" numeric(6,2),
+    "retention_rate_pct" numeric(6,2),
+    "revenue_growth_pct" numeric(10,2),
+    "team_size" integer,
+    "founder_commitment" "text",
+    "reporting_consistency" "text",
+    "reporting_compliance" "text",
+    "monthly_revenue" numeric(14,2),
+    "burn_rate" numeric(14,2),
+    "runway_months" numeric(10,1),
+    "ltv_cac_ratio" numeric(8,2),
+    "operating_margin_pct" numeric(6,2),
+    "arr" numeric(14,2),
+    "gross_margin_pct" numeric(6,2),
+    "targets_completion_rate_pct" numeric(8,2),
     CONSTRAINT "monthly_updates_month_check" CHECK ((("month" >= 1) AND ("month" <= 12)))
 );
 

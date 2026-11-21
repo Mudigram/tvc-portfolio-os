@@ -7,9 +7,10 @@ import { UpdatesTabView } from '@/features/monthly-updates/components/UpdatesTab
 
 interface CompanyUpdatesTabProps {
   companyId: string
+  companyName?: string
 }
 
-export default async function CompanyUpdatesTab({ companyId }: CompanyUpdatesTabProps) {
+export default async function CompanyUpdatesTab({ companyId, companyName }: CompanyUpdatesTabProps) {
   const [updates, targets] = await Promise.all([
     getCompanyUpdates(companyId),
     getCompanyReportingTargets(companyId),
@@ -19,6 +20,7 @@ export default async function CompanyUpdatesTab({ companyId }: CompanyUpdatesTab
   return (
     <UpdatesTabView
       companyId={companyId}
+      companyName={companyName}
       updates={updates}
       status={status}
       targets={targets}

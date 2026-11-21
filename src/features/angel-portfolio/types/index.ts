@@ -1,3 +1,5 @@
+import type { PoemMetrics } from '@/features/monthly-updates/types'
+
 export type HealthStatus = 'Green' | 'Amber' | 'Red'
 export type ExitSignal = 'Early' | 'Progressing' | 'Ready'
 
@@ -62,43 +64,46 @@ export interface AngelActivityEvent {
   occurred_at: string
 }
 
+export type AngelMonthlyUpdateItem = PoemMetrics & {
+  id: string
+  month: number | null
+  year: number | null
+  status: string
+  submitted_at: string | null
+  achievements: string | null
+  challenges: string | null
+  targets: string | null
+  review_notes?: string | null
+}
+
 // Full company detail for /portfolio/[companyId]
 export interface AngelCompanyDetail {
-    company_id: string
-    company_name: string
-    sector: string | null
-    stage: string | null
-    country: string | null
-    logo_path: string | null
-    portfolio_health: HealthStatus | null
-    health_reviewed_at: string | null
-    is_actively_raising: boolean
-    update_submitted_this_cycle: boolean
-    exit_readiness_signal: ExitSignal | null
-    positions: AngelPosition[]          // changed from singular `position`
-    blended: {
-      total_invested: number
-      total_ownership_pct: number
-      total_current_value: number
-      total_unrealized_gain: number
-      overall_moic: number | null
-    }
-    health_history: {
-      health_status: HealthStatus
-      previous_status: HealthStatus | null
-      reviewed_at: string
-    }[]
-    monthly_update_items?: {
-      id: string
-      month: number | null
-      year: number | null
-      status: string
-      submitted_at: string | null
-      achievements: string | null
-      challenges: string | null
-      targets: string | null
-    }[]
+  company_id: string
+  company_name: string
+  sector: string | null
+  stage: string | null
+  country: string | null
+  logo_path: string | null
+  portfolio_health: HealthStatus | null
+  health_reviewed_at: string | null
+  is_actively_raising: boolean
+  update_submitted_this_cycle: boolean
+  exit_readiness_signal: ExitSignal | null
+  positions: AngelPosition[]          // changed from singular `position`
+  blended: {
+    total_invested: number
+    total_ownership_pct: number
+    total_current_value: number
+    total_unrealized_gain: number
+    overall_moic: number | null
   }
+  health_history: {
+    health_status: HealthStatus
+    previous_status: HealthStatus | null
+    reviewed_at: string
+  }[]
+  monthly_update_items?: AngelMonthlyUpdateItem[]
+}
 
 // Angel user profile and holder account overview
 export interface AngelProfileData {

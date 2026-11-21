@@ -31,78 +31,84 @@ export default async function InternalDashboard() {
   const exitReady          = companies.filter((c) => c.exit_readiness_signal).length
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto">
+    <div className="space-y-8 max-w-[1600px] mx-auto pb-12">
 
       {/* ── Executive overview header ────────────────────── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-b border-border pb-6">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 border-b border-zinc-200/80 pb-6">
         <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">
-            Ecosystem Control Scorecard
+          <h1 className="text-xl sm:text-2xl font-semibold text-zinc-950 tracking-tight">
+            Ecosystem control scorecard
           </h1>
-          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider font-medium">
-            Active Asset Positions & Governance Health
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
+            Active asset positions and governance health across TVCLabs
           </p>
         </div>
 
         {/* Metrics strip */}
-        <div className="flex flex-wrap items-center gap-x-12 gap-y-6">
+        <div className="flex flex-wrap items-center gap-x-10 gap-y-6">
 
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Cycle Compliance
+            <span className="text-xs font-normal text-zinc-500 block">
+              Cycle compliance
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold text-foreground tracking-tight">
+              <span className="text-2xl sm:text-3xl font-semibold text-zinc-950 tracking-tight tabular-nums">
                 {compliantThisMonth}
               </span>
-              <span className="text-xs text-muted-foreground font-medium">/ {totalTracked} active</span>
+              <span className="text-xs text-zinc-500 font-mono">/ {totalTracked} active</span>
             </div>
           </div>
 
-          <div className="space-y-1 border-l border-border pl-8 xl:pl-12">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Active Fundraises
+          <div className="space-y-1 border-l border-zinc-200/80 pl-8 xl:pl-10">
+            <span className="text-xs font-normal text-zinc-500 block">
+              Active fundraises
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold text-primary tracking-tight">
+              <span className="text-2xl sm:text-3xl font-semibold text-zinc-950 tracking-tight tabular-nums">
                 {activelyRaising}
               </span>
-              <span className="text-xs text-muted-foreground font-medium">assets scaling</span>
+              <span className="text-xs text-zinc-500">scaling</span>
             </div>
           </div>
 
-          <div className="space-y-1 border-l border-border pl-8 xl:pl-12">
-            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-              Exit Horizons
+          <div className="space-y-1 border-l border-zinc-200/80 pl-8 xl:pl-10">
+            <span className="text-xs font-normal text-zinc-500 block">
+              Exit horizons
             </span>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-semibold text-emerald-600 tracking-tight">
+              <span className="text-2xl sm:text-3xl font-semibold text-emerald-700 tracking-tight tabular-nums">
                 {exitReady}
               </span>
-              <span className="text-xs text-muted-foreground font-medium">signals clear</span>
+              <span className="text-xs text-zinc-500">clear</span>
             </div>
           </div>
 
           {/* Donut + legend */}
-          <div className="flex items-center gap-4 border-l border-border pl-8 xl:pl-12">
+          <div className="flex items-center gap-4 border-l border-zinc-200/80 pl-8 xl:pl-10">
             <HealthDonutChart red={red} amber={amber} green={green} unset={unset} />
-            <div className="flex flex-col gap-1 justify-center">
+            <div className="flex flex-col gap-1.5 justify-center">
               {red > 0 && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-red-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
-                  <span>{red} Critical</span>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-rose-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  <span className="font-mono tabular-nums">{red}</span> Attention
                 </div>
               )}
               {amber > 0 && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                  <span>{amber} Pending</span>
+                  <span className="font-mono tabular-nums">{amber}</span> Monitor
                 </div>
               )}
               {green > 0 && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>{green} Stable</span>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="font-mono tabular-nums">{green}</span> On track
+                </div>
+              )}
+              {unset > 0 && (
+                <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-300" />
+                  <span className="font-mono tabular-nums">{unset}</span> Unreviewed
                 </div>
               )}
             </div>
@@ -117,8 +123,8 @@ export default async function InternalDashboard() {
       {/* ── Recent activity feed ─────────────────────────── */}
       <RecentActivityFeed items={activityItems} />
 
-        {/* ── Cap table & ownership section ────────────────── */}
-        <CapTableDashboardSection {...capTableData} />
+      {/* ── Cap table & ownership section ────────────────── */}
+      <CapTableDashboardSection data={capTableData.data} />
 
     </div>
   )

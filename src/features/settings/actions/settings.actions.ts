@@ -82,6 +82,43 @@ export async function inviteUserAction(
   return { success: true }
 }
 
+// ── 2b. Create user directly with password ───────────────────
+// Uses service role to call auth.admin.createUser with email_confirm: true
+// Sets role in app_metadata immediately so the user can log in without waiting for an email.
+export async function createUserWithPasswordAction(
+  email: string,
+  role: UserRole,
+  password: string,
+): Promise<SettingsActionResult> {
+  const guard = await guardInternal()
+  if (guard) return guard
+
+  if (!email || !role || !password) {
+    return { success: false, error: 'Email, role, and password are required' }
+  }
+
+  if (password.length < 6) {
+    return { success: false, error: 'Password must be at least 6 characters' }
+  }
+
+  const supabase = createServiceRoleClient()
+
+  const { error } = await supabase.auth.admin.createUser({
+    email: email.trim(),
+    password: password.trim(),
+    email_confirm: true,
+    app_metadata: { role },
+  })
+
+  if (error) {
+    console.error('[settings] createUserWithPassword error:', error.message)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath('/settings')
+  return { success: true }
+}
+
 // ── 3. Change an existing user's role ────────────────────────
 export async function updateUserRoleAction(
   userId: string,
@@ -233,6 +270,136 @@ export async function getAvailableExposuresAction(): Promise<import('../types').
       amount_invested: amountInvested,
     }
   })
+}
+
+// ── 6b. Fetch ALL ecosystem companies with their existing positions ────
+export async function getAllEcosystemCompaniesAction(): Promise<import('../types').EcosystemCompany[]> {
+  const guard = await guardInternal()
+  if (guard) return []
+
+  const supabase = createServiceRoleClient()
+
+  // 1. Fetch all companies in the master database
+  const { data: companiesData, error: compError } = await supabase
+    .from('companies')
+    .select('id, name, logo_path, sector, stage, country')
+    .order('name', { ascending: true })
+
+  if (compError || !companiesData) {
+    console.error('[settings] getAllEcosystemCompanies companies error:', compError?.message)
+    return []
+  }
+
+  // 2. Fetch all exposure positions
+  const { data: posData } = await supabase
+    .from('exposure_positions')
+    .select(`
+      id,
+      company_id,
+      instrument_name,
+      exposure_type,
+      exposure_events (
+        amount
+      )
+    `)
+
+  const positionsByCompany = new Map<string, import('../types').AvailableExposure[]>()
+  for (const pos of posData ?? []) {
+    const events = (pos.exposure_events ?? []) as { amount: number }[]
+    const amountInvested = events.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    const list = positionsByCompany.get(pos.company_id) || []
+    list.push({
+      id: pos.id,
+      company_id: pos.company_id,
+      company_name: '',
+      instrument_name: pos.instrument_name ?? null,
+      exposure_type: pos.exposure_type ?? '',
+      amount_invested: amountInvested,
+    })
+    positionsByCompany.set(pos.company_id, list)
+  }
+
+  return companiesData.map((c) => ({
+    id: c.id,
+    name: c.name,
+    logo_path: c.logo_path ?? null,
+    sector: c.sector ?? null,
+    stage: c.stage ?? null,
+    country: c.country ?? null,
+    existing_positions: positionsByCompany.get(c.id) || [],
+  }))
+}
+
+// ── 6c. Create a new holding position and link directly to angel ──
+export async function createAndLinkAngelHoldingAction(
+  input: import('../types').CreateAngelHoldingInput
+): Promise<SettingsActionResult> {
+  const guard = await guardInternal()
+  if (guard) return guard
+
+  if (!input.angelUserId || !input.companyId || !input.amountInvested) {
+    return { success: false, error: 'Angel user, company, and amount invested are required.' }
+  }
+
+  const supabase = createServiceRoleClient()
+  const effectiveDate = input.issueDate || new Date().toISOString().split('T')[0]
+  const instrumentType = input.exposureType || 'SAFE'
+  const instrumentTitle = input.instrumentName?.trim() || `${instrumentType} Position`
+
+  // 1. Insert new position
+  const { data: pos, error: posError } = await supabase
+    .from('exposure_positions')
+    .insert({
+      company_id: input.companyId,
+      holder_id: '10000000-0000-0000-0000-000000000003', // Angels@TVCLabs SPV
+      holder_type: 'Syndicate',
+      exposure_type: instrumentType,
+      instrument_name: instrumentTitle,
+      ownership_pct: input.ownershipPct != null && !isNaN(input.ownershipPct) ? input.ownershipPct : null,
+      issue_date: effectiveDate,
+      status: 'Active',
+    })
+    .select('id')
+    .single()
+
+  if (posError || !pos) {
+    console.error('[settings] create position error:', posError?.message)
+    return { success: false, error: posError?.message || 'Failed to create position.' }
+  }
+
+  // 2. Insert financial investment event
+  const { error: eventError } = await supabase
+    .from('exposure_events')
+    .insert({
+      position_id: pos.id,
+      event_type: 'investment',
+      effective_date: effectiveDate,
+      amount: input.amountInvested,
+      currency: 'USD',
+      notes: 'Initial check size created via PM Angel Holdings Manager',
+    })
+
+  if (eventError) {
+    console.error('[settings] create event error:', eventError?.message)
+    // Non-fatal, position exists
+  }
+
+  // 3. Link to angel user
+  const { error: linkError } = await supabase
+    .from('angel_exposures')
+    .insert({
+      user_id: input.angelUserId,
+      exposure_id: pos.id,
+    })
+
+  if (linkError) {
+    console.error('[settings] link error:', linkError?.message)
+    return { success: false, error: linkError?.message || 'Position created but failed to link to angel.' }
+  }
+
+  revalidatePath('/settings')
+  revalidatePath('/portfolio')
+  return { success: true }
 }
 
 // ── 7. Link an exposure position to an angel user ──────────────

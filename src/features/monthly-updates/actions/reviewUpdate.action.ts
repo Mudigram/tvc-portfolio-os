@@ -30,16 +30,34 @@ export async function reviewUpdateAction(
 
   const supabase = await createServerClient()
 
-  const { error } = await supabase
+  // Map 'Verified' to valid Postgres enum 'Reviewed'
+  const targetStatus = input.status === 'Verified' ? 'Reviewed' : input.status
+
+  let { error } = await supabase
     .from('monthly_updates')
     .update({
-      status: input.status,
+      status: targetStatus,
       review_notes: input.reviewNotes?.trim() || null,
       reviewed_at: new Date().toISOString(),
       reviewed_by: claims.email,
     })
     .eq('id', input.updateId)
     .eq('company_id', input.companyId)
+
+  // If Postgres enum doesn't support 'Needs Correction' (22P02), fallback to 'Draft' with review_notes
+  if (error && error.code === '22P02' && input.status === 'Needs Correction') {
+    const fallback = await supabase
+      .from('monthly_updates')
+      .update({
+        status: 'Draft',
+        review_notes: input.reviewNotes?.trim() || null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: claims.email,
+      })
+      .eq('id', input.updateId)
+      .eq('company_id', input.companyId)
+    error = fallback.error
+  }
 
   if (error) {
     console.error('[reviewUpdate.action] error:', error.message)

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { AngelActivityEvent } from '@/features/angel-portfolio/types'
-import { FileText, ShieldAlert, Sparkles, TrendingUp, CheckCircle2 } from 'lucide-react'
+import { FileText, ShieldAlert, ArrowUpRight, TrendingUp, CheckCircle2 } from 'lucide-react'
 
 interface AngelActivityFeedProps {
   events: AngelActivityEvent[]
@@ -11,7 +11,7 @@ const EVENT_CONFIG: Record<string, { icon: typeof FileText; bg: string; text: st
   health_changed:   { icon: ShieldAlert,  bg: 'bg-amber-50',   text: 'text-amber-800', dot: 'bg-amber-500' },
   health_reviewed:  { icon: CheckCircle2, bg: 'bg-zinc-100',   text: 'text-zinc-700',  dot: 'bg-zinc-400' },
   update_submitted: { icon: FileText,     bg: 'bg-emerald-50', text: 'text-emerald-800', dot: 'bg-emerald-500' },
-  raise_started:    { icon: Sparkles,     bg: 'bg-blue-50',    text: 'text-blue-800',  dot: 'bg-blue-500' },
+  raise_started:    { icon: ArrowUpRight, bg: 'bg-blue-50',    text: 'text-blue-800',  dot: 'bg-blue-500' },
   raise_ended:      { icon: TrendingUp,   bg: 'bg-zinc-100',   text: 'text-zinc-700',  dot: 'bg-zinc-400' },
 }
 

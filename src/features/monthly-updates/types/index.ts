@@ -1,10 +1,37 @@
-// ─── What a row from the monthly_updates table looks like ───────────────────
-// This mirrors your database columns. Every field that comes back from Supabase
-// gets a type here. If a column can be null in the DB, it's null here too.
+// src/features/monthly-updates/types/index.ts
 
-export type UpdateStatus = 'Draft' | 'Submitted' | 'Verified' | 'Needs Correction'
+export type UpdateStatus = 'Draft' | 'Submitted' | 'Verified' | 'Reviewed' | 'Needs Correction'
 
-export interface MonthlyUpdate {
+// ─── POEM KPI Framework ─────────────────────────────────────────────────────
+export interface PoemMetrics {
+  // 1. Proposition
+  active_customers?: number | null
+  monthly_user_growth_pct?: number | null
+  paying_customers?: number | null
+  churn_rate_pct?: number | null
+  retention_rate_pct?: number | null
+  revenue_growth_pct?: number | null
+
+  // 2. Organization
+  team_size?: number | null
+  founder_commitment?: 'Full-time' | 'Part-time' | 'Transitioning' | 'Other' | string | null
+  reporting_consistency?: 'High' | 'Medium' | 'Low' | string | null
+  reporting_compliance?: 'Compliant' | 'Needs Review' | 'Non-Compliant' | string | null
+
+  // 3. Economics
+  monthly_revenue?: number | null
+  burn_rate?: number | null
+  runway_months?: number | null
+  ltv_cac_ratio?: number | null
+  operating_margin_pct?: number | null
+  arr?: number | null
+  gross_margin_pct?: number | null
+
+  // 4. Milestones
+  targets_completion_rate_pct?: number | null
+}
+
+export interface MonthlyUpdate extends PoemMetrics {
   id: string
   company_id: string
   month: number           // 1–12
@@ -34,23 +61,17 @@ export interface ReportingTarget {
 }
 
 // ─── What the form sends to the server action ───────────────────────────────
-// A subset of MonthlyUpdate. The fields the user fills in.
-// id, created_at, submitted_at are not here — the database or server sets those.
-
-export interface CreateUpdateInput {
+export interface CreateUpdateInput extends PoemMetrics {
   company_id: string
   month: number
   year: number
-  achievements: string
-  challenges: string
-  targets: string
+  achievements?: string
+  challenges?: string
+  targets?: string
   status?: UpdateStatus   // Optional — defaults to 'Draft' in the action
 }
 
 // ─── A computed summary the UI uses to show status banners ──────────────────
-// Not a database shape — we compute this in the service from the raw rows.
-// The UI shouldn't have to do this calculation itself.
-
 export interface UpdateStatusInfo {
   hasCurrentPeriodUpdate: boolean   // Did they submit for this calendar month?
   hasRecentUpdate: boolean          // Was the last submission within 30 days?

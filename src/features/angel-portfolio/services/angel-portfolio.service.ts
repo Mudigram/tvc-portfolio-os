@@ -474,14 +474,7 @@ export async function getAngelCompanyDetail(
           created_at
         ),
         monthly_updates (
-          id,
-          month,
-          year,
-          status,
-          submitted_at,
-          achievements,
-          challenges,
-          targets
+          *
         ),
         exit_readiness (
           overall_readiness
@@ -586,8 +579,19 @@ export async function getAngelCompanyDetail(
       overall_moic: overallMoic,
     }
 
-    // Sort updates by year desc, month desc
-    const sortedUpdates = [...updates].sort((a, b) => {
+    // Sort updates by year desc, month desc and merge POEM fallback if present
+    const sortedUpdates = [...updates].map((u: any) => {
+      let extra: any = {}
+      if (u.review_notes && typeof u.review_notes === 'string' && u.review_notes.includes('_poem_fallback')) {
+        try {
+          const parsed = JSON.parse(u.review_notes)
+          if (parsed && parsed._poem_fallback) {
+            extra = parsed
+          }
+        } catch {}
+      }
+      return { ...extra, ...u }
+    }).sort((a, b) => {
       const dateA = a.submitted_at ? new Date(a.submitted_at).getTime() : 0
       const dateB = b.submitted_at ? new Date(b.submitted_at).getTime() : 0
       return dateB - dateA
